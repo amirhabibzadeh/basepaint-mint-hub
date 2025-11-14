@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth } from "@/lib/basepaint";
 import { StatCard } from "@/components/StatCard";
 import { ContributorsList } from "@/components/ContributorsList";
-import { MintButton } from "@/components/MintButton";
+import { MintWithWallet } from "@/components/MintWithWallet";
 import { FarcasterAuth } from "@/components/FarcasterAuth";
+import { WalletConnect } from "@/components/WalletConnect";
 import { Palette, Coins, Grid3x3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -83,6 +84,9 @@ const Index = () => {
           <div className="space-y-6 animate-fade-in">
             {/* Farcaster Authentication */}
             <FarcasterAuth />
+
+            {/* Wallet Connection */}
+            <WalletConnect />
             {/* Artwork Display */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-primary opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-300 rounded-2xl" />
@@ -123,7 +127,7 @@ const Index = () => {
             )}
 
             {/* Mint Button */}
-            <MintButton canvasId={canvasId} referralId={referralId} />
+            <MintWithWallet canvasId={canvasId} referralId={referralId} />
 
             {/* Footer Info */}
             <div className="text-center text-sm text-muted-foreground">
