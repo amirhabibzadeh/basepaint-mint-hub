@@ -77,21 +77,3 @@ This project is built with:
    - **AWS Amplify**, **Cloudflare Pages**, or any static host
 
 3. Make sure `/.well-known/farcaster.json` is accessible on your domain
-
-### Publishing as a Farcaster Miniapp
-
-See [PUBLISHING.md](./PUBLISHING.md) for complete instructions on:
-- Setting up your manifest
-- Choosing a domain
-- Verifying app ownership
-- Becoming eligible for developer rewards
-
-## Simply open [Lovable](https://lovable.dev/projects/673326c5-f1a4-40ab-9397-b9a755cf1811) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

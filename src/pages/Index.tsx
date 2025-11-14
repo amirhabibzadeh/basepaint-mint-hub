@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth } from "@/lib/basepaint";
+import { generateMiniappEmbed, injectEmbedMeta } from "@/lib/utils";
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
 import { FarcasterAuth } from "@/components/FarcasterAuth";
@@ -59,6 +60,15 @@ const Index = () => {
     if (isConnected && address) {
       const link = `${window.location.origin}?referrer=${address}`;
       setRefLink(link);
+      
+      // Inject embed metadata for rich sharing on Farcaster
+      const embedJson = generateMiniappEmbed(link, {
+        imageUrl: "https://basepaint.art/og-image.png",
+        buttonTitle: "🎨 Mint Canvas",
+        buttonUrl: link,
+        appName: "BasePaint Mint Hub"
+      });
+      injectEmbedMeta(embedJson);
     } else {
       setRefLink(null);
     }
@@ -106,7 +116,7 @@ const Index = () => {
 
   const shareToFarcaster = () => {
     if (!refLink) return;
-    const text = `Mint on BasePaint: ${refLink}`;
+    const text = `Mint on BasePaint: ${refLink}\n\nEarn 10% of protocol fees on referrals! 💰`;
     // Try opening Warpcast compose with prefilled text (best-effort)
     const warpUrl = `https://warpcast.com/compose?text=${encodeURIComponent(text)}`;
     try {
@@ -234,9 +244,12 @@ const Index = () => {
                       readOnly
                       value={refLink}
                       className="flex-1 font-mono text-sm bg-transparent border border-border/30 px-3 py-2 rounded-md truncate"
+                      title="Share this link with others - you earn 10% of protocol fees for mints that use it"
                     />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Share this link — you earn 10% of protocol fees for mints that use it.</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Share this link — you earn 10% of protocol fees for mints that use it. 
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-3 md:mt-0">
                   <a href={refLink} target="_blank" rel="noreferrer">
