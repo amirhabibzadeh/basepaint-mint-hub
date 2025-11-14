@@ -6,15 +6,14 @@
     "homeUrl": "https://basepaint.art/",
     "splashImageUrl": "https://basepaint.xyz/logo.png",
     "splashBackgroundColor": "#000000",
-    "subtitle": "Collaborative on-chain art canvas",
+    "subtitle": "Collaborative on-chain art",
     "description": "Mint and contribute pixels to collaborative on-chain art canvases on Base Network. Earn protocol fees from referrals.",
     "primaryCategory": "art-creativity",
     "tags": [
       "art",
       "base",
       "mint",
-      "nft",
-      "collaborative",
+      "
       "onchain"
     ],
     "requiredChains": [
