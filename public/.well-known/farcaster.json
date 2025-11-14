@@ -1,4 +1,9 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjExODMxLCJ0eXBlIjoiYXV0aCIsImtleSI6IjB4QkFiRThBYzFmMDU1OGZiZTNiNDVmNkIzRjZEYUVlMjhGRWUyMDU1QyJ9",
+    "payload": "eyJkb21haW4iOiJiYXNlcGFpbnQtbWludC1odWIubG92YWJsZS5hcHAifQ",
+    "signature": "vg9jFUviTGe08dnzGnyQFwnqR7v3Z7ZjK96jtyqvCslkbjLrofxyDJSSq52wOGlVa1jLLU2ytBtG1sTBPXfQyhw="
+  },
   "miniapp": {
     "version": "1",
     "name": "BasePaint Mint Hub",
@@ -22,11 +27,6 @@
     "noindex": false,
     "ogTitle": "BasePaint Mint Hub",
     "ogDescription": "Mint and contribute to collaborative on-chain art canvases on Base Network",
-    "ogImageUrl": "https://basepaint-mint-hub.lovable.app/og-image.png",
-    "accountAssociation": {
-      "header": "eyJmaWQiOjExODMxLCJ0eXBlIjoiYXV0aCIsImtleSI6IjB4QkFiRThBYzFmMDU1OGZiZTNiNDVmNkIzRjZEYUVlMjhGRWUyMDU1QyJ9",
-      "payload": "eyJkb21haW4iOiJiYXNlcGFpbnQtbWludC1odWIubG92YWJsZS5hcHAifQ",
-      "signature": "vg9jFUviTGe08dnzGnyQFwnqR7v3Z7ZjK96jtyqvCslkbjLrofxyDJSSq52wOGlVa1jLLU2ytBtG1sTBPXfQyhw="
-    }
+    "ogImageUrl": "https://basepaint-mint-hub.lovable.app/og-image.png"
   }
 }
