@@ -145,3 +145,24 @@ export function FarcasterAuth() {
     </Button>
   );
 }
+
+// Helper component: small button to open the Farcaster Mini App Preview Tool
+export function FarcasterPreviewButton() {
+  const openPreview = () => {
+    try {
+      const encoded = encodeURIComponent(window.location.href);
+      const url = `https://farcaster.xyz/~/developers/mini-apps/preview?url=${encoded}`;
+      window.open(url, '_blank');
+    } catch (e) {
+      console.error('Failed to open Farcaster preview:', e);
+    }
+  };
+
+  return (
+    <div className="mt-2 text-center">
+      <Button onClick={openPreview} variant="ghost" size="sm" className="text-xs">
+        Preview in Farcaster
+      </Button>
+    </div>
+  );
+}
