@@ -64,6 +64,7 @@ export interface FarcasterUser {
   username?: string;
   displayName?: string;
   pfpUrl?: string;
+  walletAddress?: string;
 }
 
 export async function initializeFarcasterSDK() {
@@ -95,6 +96,7 @@ export async function signInWithFarcaster(): Promise<FarcasterUser | null> {
       username: context.user?.username,
       displayName: context.user?.displayName,
       pfpUrl: context.user?.pfpUrl,
+      walletAddress: (context.user as { custody_address?: string }).custody_address,
     };
   } catch (error) {
   if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'RejectedByUser') {

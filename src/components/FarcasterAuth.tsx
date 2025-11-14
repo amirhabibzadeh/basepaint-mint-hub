@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,6 +12,7 @@ export function FarcasterAuth() {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLogin, setAutoLogin] = useState(false);
+  const { connect, connectors } = useConnect();
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +74,22 @@ export function FarcasterAuth() {
         toast.success(`Welcome, ${result.displayName || result.username || 'Farcaster User'}!`, {
           description: `FID: ${result.fid}`,
         });
+        
+        // Auto-connect wallet if wallet address is available from Farcaster auth
+        if (result.walletAddress) {
+          // Find a connector that can connect to this address (e.g., CoinbaseWallet, Injected)
+          const connector = connectors.find(c => 
+            c.id === 'coinbaseWalletSDK' || c.id === 'injected'
+          );
+          if (connector) {
+            try {
+              connect({ connector });
+            } catch (err) {
+              console.debug('Auto wallet connect attempt:', err);
+              // Non-critical; user can click wallet button manually if needed
+            }
+          }
+        }
       } else {
         toast.error("Sign-in was cancelled or failed");
       }
@@ -101,6 +119,11 @@ export function FarcasterAuth() {
                 FID: {user.fid}
                 {user.username && ` • @${user.username}`}
               </div>
+              {user.walletAddress && (
+                <div className="text-xs text-muted-foreground mt-1 font-mono">
+                  {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+                </div>
+              )}
             </div>
           </div>
         </div>
