@@ -63,7 +63,7 @@ const Index = () => {
       
       // Inject embed metadata for rich sharing on Farcaster
       const embedJson = generateMiniappEmbed(link, {
-        imageUrl: "https://basepaint.art/og-image.png",
+        imageUrl: "https://basepaint-mint-hub.lovable.app/og-image.png",
         buttonTitle: "🎨 Mint Canvas",
         buttonUrl: link,
         appName: "BasePaint Mint Hub"
