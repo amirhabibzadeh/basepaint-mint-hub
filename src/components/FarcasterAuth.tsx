@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,13 +11,16 @@ export function FarcasterAuth() {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLogin, setAutoLogin] = useState(false);
+  const autoLoginAttemptedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     const checkAuth = async () => {
       // Detect if inside Farcaster MiniApp
       const inMiniApp = await isInMiniApp();
-      if (inMiniApp) {
+      // Prevent repeated automatic login attempts (can cause loops inside miniapp)
+      if (inMiniApp && !autoLoginAttemptedRef.current) {
+        autoLoginAttemptedRef.current = true;
         setAutoLogin(true);
         setIsLoading(true);
         try {
@@ -33,7 +36,7 @@ export function FarcasterAuth() {
         } finally {
           if (!cancelled) setIsLoading(false);
         }
-      } else {
+      } else if (!inMiniApp) {
         // Fallback: check normal context
         const context = await getFarcasterContext();
         if (context?.user) {
