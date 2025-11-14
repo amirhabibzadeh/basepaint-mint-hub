@@ -8,6 +8,7 @@ import { config } from "@/lib/wagmi";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
+import { initializeFarcasterSDK } from "@/lib/farcaster";
 
 const queryClient = new QueryClient();
 
@@ -19,9 +20,10 @@ function initializeMiniappSDK() {
     url.searchParams.get("miniApp") === "true";
 
   if (isMiniApp) {
-    import("@farcaster/frame-sdk").then(({ sdk }) => {
-      sdk.actions.ready();
-    }).catch(err => {
+    // Use the centralized initializer (it's idempotent so calling multiple
+    // times is safe). This avoids importing/initializing the SDK twice
+    // and prevents repeated ready()/quick-auth loops.
+    initializeFarcasterSDK().catch(err => {
       console.warn("Failed to initialize Farcaster miniapp SDK:", err);
     });
   }
