@@ -1,9 +1,9 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { signInWithFarcaster, getFarcasterContext, FarcasterUser, quickAuthUser, isInMiniApp } from "@/lib/farcaster";
+import { signInWithFarcaster, getFarcasterContext, FarcasterUser, quickAuthUser, isInMiniApp, hasQuickAuthBeenAttempted, markQuickAuthAsAttempted } from "@/lib/farcaster";
 import { LogIn, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,16 +11,16 @@ export function FarcasterAuth() {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLogin, setAutoLogin] = useState(false);
-  const autoLoginAttemptedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     const checkAuth = async () => {
       // Detect if inside Farcaster MiniApp
       const inMiniApp = await isInMiniApp();
-      // Prevent repeated automatic login attempts (can cause loops inside miniapp)
-      if (inMiniApp && !autoLoginAttemptedRef.current) {
-        autoLoginAttemptedRef.current = true;
+      // Prevent repeated automatic login attempts globally (prevents duplicates
+      // if FarcasterAuth component is rendered multiple times on the same page)
+      if (inMiniApp && !hasQuickAuthBeenAttempted()) {
+        markQuickAuthAsAttempted();
         setAutoLogin(true);
         setIsLoading(true);
         try {

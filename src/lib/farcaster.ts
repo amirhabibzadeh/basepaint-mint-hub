@@ -3,6 +3,18 @@ import { sdk } from '@farcaster/frame-sdk';
 // Module-level guard so initialization is idempotent and safe to call multiple times
 let _farcasterInitialized = false;
 
+// Track if quickAuth has been attempted globally (prevents duplicate auto-login
+// if FarcasterAuth component is rendered multiple times on the same page)
+let _quickAuthAttempted = false;
+
+export function hasQuickAuthBeenAttempted(): boolean {
+  return _quickAuthAttempted;
+}
+
+export function markQuickAuthAsAttempted(): void {
+  _quickAuthAttempted = true;
+}
+
 // Detect if running inside Farcaster MiniApp
 export async function isInMiniApp(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
