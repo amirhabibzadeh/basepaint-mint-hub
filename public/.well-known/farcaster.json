@@ -1,0 +1,28 @@
+{
+  "miniapp": {
+    "version": "1",
+    "name": "BasePaint Mint Hub",
+    "iconUrl": "https://basepaint.xyz/logo.png",
+    "homeUrl": "https://basepaint.art/",
+    "splashImageUrl": "https://basepaint.xyz/logo.png",
+    "splashBackgroundColor": "#000000",
+    "subtitle": "Collaborative on-chain art canvas",
+    "description": "Mint and contribute pixels to collaborative on-chain art canvases on Base Network. Earn protocol fees from referrals.",
+    "primaryCategory": "art-creativity",
+    "tags": [
+      "art",
+      "base",
+      "mint",
+      "nft",
+      "collaborative",
+      "onchain"
+    ],
+    "requiredChains": [
+      "eip155:8453"
+    ],
+    "noindex": false,
+    "ogTitle": "BasePaint Mint Hub",
+    "ogDescription": "Mint and contribute to collaborative on-chain art canvases on Base Network",
+    "ogImageUrl": "https://basepaint.xyz/logo.png"
+  }
+}
