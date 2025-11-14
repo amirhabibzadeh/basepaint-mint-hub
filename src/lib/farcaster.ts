@@ -1,3 +1,41 @@
+// Detect if running inside Farcaster MiniApp
+export async function isInMiniApp(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    return await sdk.isInMiniApp();
+  } catch {
+    return false;
+  }
+}
+
+// Use quickAuth for automatic login inside MiniApp
+export async function quickAuthUser(): Promise<FarcasterUser | null> {
+  try {
+    const result = await sdk.experimental.quickAuth();
+    // result is { token, payload } or just { token } (older SDKs)
+    let payload: any = undefined;
+    if ('payload' in result && result.payload) {
+      payload = result.payload;
+    } else if (result.token) {
+      // Try to decode JWT if payload missing (for older SDKs)
+      const base64 = result.token.split('.')[1];
+      if (base64) {
+        try {
+          payload = JSON.parse(atob(base64.replace(/-/g, '+').replace(/_/g, '/')));
+        } catch {}
+      }
+    }
+    if (!payload) return null;
+    return {
+      fid: payload.fid,
+      username: payload.username,
+      displayName: payload.displayName,
+      pfpUrl: payload.pfpUrl,
+    };
+  } catch {
+    return null;
+  }
+}
 import { sdk } from '@farcaster/frame-sdk';
 
 export interface FarcasterUser {
@@ -22,25 +60,20 @@ export async function signInWithFarcaster(): Promise<FarcasterUser | null> {
   try {
     // Generate a simple nonce for SIWE
     const nonce = Math.random().toString(36).substring(2, 15);
-    
     const result = await sdk.actions.signIn({ 
       nonce,
       acceptAuthAddress: true 
     });
-    
-    console.log('Farcaster sign-in result:', result);
-    
     // Get user context after sign-in
     const context = await sdk.context;
-    
     return {
       fid: context.user?.fid || 0,
       username: context.user?.username,
       displayName: context.user?.displayName,
       pfpUrl: context.user?.pfpUrl,
     };
-  } catch (error: any) {
-    if (error.name === 'RejectedByUser') {
+  } catch (error) {
+    if (error && typeof error === 'object' && 'name' in error && (error as any).name === 'RejectedByUser') {
       console.log('User rejected sign-in');
     } else {
       console.error('Error signing in with Farcaster:', error);

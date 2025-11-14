@@ -1,10 +1,11 @@
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
+import type { Connector } from 'wagmi';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Wallet, LogOut, AlertCircle } from "lucide-react";
 import { formatAddress } from "@/lib/basepaint";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { base } from "wagmi/chains";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -14,6 +15,8 @@ export function WalletConnect() {
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   // Auto-switch to Base if connected to wrong chain
   useEffect(() => {
@@ -31,7 +34,17 @@ export function WalletConnect() {
     switchToBase();
   }, [chainId, isConnected, switchChainAsync]);
 
-  const handleConnect = async (connector: any) => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const handleConnect = async (connector: Connector) => {
     try {
       connect({ connector });
     } catch (error) {
@@ -80,26 +93,38 @@ export function WalletConnect() {
       </Card>
     );
   }
-
   return (
-    <Card className="border-border/50 bg-gradient-card backdrop-blur-xl">
-      <div className="p-4 space-y-2">
-        <div className="text-sm text-muted-foreground mb-3">Connect your wallet to mint</div>
-        {connectors
-          .filter((connector) => connector.id !== 'injected' || connector.name !== 'Injected')
-          .map((connector) => (
-            <Button
-              key={connector.id}
-              onClick={() => handleConnect(connector)}
-              disabled={isPending}
-              variant="outline"
-              className="w-full justify-start border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-            >
-              <Wallet className="w-4 h-4 mr-2" />
-              {connector.name === 'Injected' ? 'Browser Wallet' : connector.name}
-            </Button>
-          ))}
-      </div>
-    </Card>
+    <div ref={ref} className="relative inline-block">
+      <Button
+        onClick={() => setOpen((s) => !s)}
+        variant="outline"
+        className="flex items-center gap-2"
+      >
+        <Wallet className="w-4 h-4" />
+        Connect Wallet
+      </Button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-56 bg-card border border-border/50 rounded-lg shadow-lg p-3 z-50">
+          <div className="text-sm text-muted-foreground mb-2">Connect your wallet to mint</div>
+          <div className="space-y-2">
+            {connectors
+              .filter((connector) => connector.id !== 'injected' || connector.name !== 'Injected')
+              .map((connector) => (
+                <Button
+                  key={connector.id}
+                  onClick={() => { setOpen(false); handleConnect(connector); }}
+                  disabled={isPending}
+                  variant="outline"
+                  className="w-full justify-start border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  {connector.name === 'Injected' ? 'Browser Wallet' : connector.name}
+                </Button>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

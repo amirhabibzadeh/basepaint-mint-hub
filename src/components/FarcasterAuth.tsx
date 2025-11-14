@@ -1,30 +1,64 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { signInWithFarcaster, getFarcasterContext, FarcasterUser } from "@/lib/farcaster";
+import { signInWithFarcaster, getFarcasterContext, FarcasterUser, quickAuthUser, isInMiniApp } from "@/lib/farcaster";
 import { LogIn, User } from "lucide-react";
 import { toast } from "sonner";
 
 export function FarcasterAuth() {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [autoLogin, setAutoLogin] = useState(false);
 
   useEffect(() => {
-    // Check if already authenticated
+    let cancelled = false;
     const checkAuth = async () => {
-      const context = await getFarcasterContext();
-      if (context?.user) {
-        setUser({
-          fid: context.user.fid,
-          username: context.user.username,
-          displayName: context.user.displayName,
-          pfpUrl: context.user.pfpUrl,
-        });
+      // Detect if inside Farcaster MiniApp
+      const inMiniApp = await isInMiniApp();
+      if (inMiniApp) {
+        setAutoLogin(true);
+        setIsLoading(true);
+        try {
+          const quickUser = await quickAuthUser();
+          if (!cancelled && quickUser) {
+            setUser(quickUser);
+            toast.success(`Welcome, ${quickUser.displayName || quickUser.username || 'Farcaster User'}!`, {
+              description: `FID: ${quickUser.fid}`,
+            });
+          }
+        } catch (e) {
+          if (!cancelled) toast.error("Automatic login failed");
+        } finally {
+          if (!cancelled) setIsLoading(false);
+        }
+      } else {
+        // Fallback: check normal context
+        const context = await getFarcasterContext();
+        if (context?.user) {
+          setUser({
+            fid: context.user.fid,
+            username: context.user.username,
+            displayName: context.user.displayName,
+            pfpUrl: context.user.pfpUrl,
+          });
+        }
       }
     };
     checkAuth();
+    return () => { cancelled = true; };
   }, []);
+
+  // Notify parent / global listeners about auth state changes
+  useEffect(() => {
+    try {
+      // Emit a window event so pages (like Index) can react to Farcaster sign-in
+      window.dispatchEvent(new CustomEvent('farcaster:auth', { detail: user }));
+    } catch (e) {
+      // ignore
+    }
+  }, [user]);
 
   const handleSignIn = async () => {
     setIsLoading(true);
@@ -79,7 +113,9 @@ export function FarcasterAuth() {
       className="w-full border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
     >
       <LogIn className="w-4 h-4 mr-2" />
-      {isLoading ? "Connecting..." : "Connect with Farcaster"}
+      {isLoading
+        ? (autoLogin ? "Connecting to Farcaster..." : "Connecting...")
+        : "Connect with Farcaster"}
     </Button>
   );
 }
