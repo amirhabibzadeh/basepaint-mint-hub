@@ -3,7 +3,8 @@ import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth } from "@/l
 import { StatCard } from "@/components/StatCard";
 import { ContributorsList } from "@/components/ContributorsList";
 import { MintButton } from "@/components/MintButton";
-import { Palette, Coins, Users, Grid3x3 } from "lucide-react";
+import { FarcasterAuth } from "@/components/FarcasterAuth";
+import { Palette, Coins, Grid3x3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
@@ -80,6 +81,8 @@ const Index = () => {
           </div>
         ) : canvasData && canvasId ? (
           <div className="space-y-6 animate-fade-in">
+            {/* Farcaster Authentication */}
+            <FarcasterAuth />
             {/* Artwork Display */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-primary opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-300 rounded-2xl" />

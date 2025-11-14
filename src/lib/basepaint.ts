@@ -40,7 +40,7 @@ export async function getCurrentCanvasId(): Promise<number> {
         },
       ] as const,
       functionName: 'today',
-    });
+    } as any);
     
     // Return yesterday's canvas (today - 1)
     return Number(data) - 1;
