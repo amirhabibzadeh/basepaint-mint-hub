@@ -34,10 +34,20 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         setInitialized(true);
 
-        // populate context if available
+        // Get context and set user state - this is the primary source of truth
         const ctx = await getFarcasterContext();
-        if (mounted && ctx?.user) setUser(ctx.user as FarcasterUser);
-        if (mounted && ctx?.client) setClient(ctx.client as Record<string, unknown>);
+        if (mounted) {
+          if (ctx?.user) {
+            const farcasterUser: FarcasterUser = {
+              fid: ctx.user.fid,
+              username: ctx.user.username,
+              displayName: ctx.user.displayName,
+              pfpUrl: ctx.user.pfpUrl,
+            };
+            setUser(farcasterUser);
+          }
+          if (ctx?.client) setClient(ctx.client as Record<string, unknown>);
+        }
 
         // Listen to client events (if host provides sdk events)
         if (sdk && typeof (sdk as unknown as Record<string, unknown>)['on'] === 'function') {
@@ -46,7 +56,15 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           };
           const onContext = async () => {
             const updated = await getFarcasterContext();
-            if (mounted && updated?.user) setUser(updated.user as FarcasterUser);
+            if (mounted && updated?.user) {
+              const farcasterUser: FarcasterUser = {
+                fid: updated.user.fid,
+                username: updated.user.username,
+                displayName: updated.user.displayName,
+                pfpUrl: updated.user.pfpUrl,
+              };
+              setUser(farcasterUser);
+            }
             if (mounted && updated?.client) setClient(updated.client as Record<string, unknown>);
           };
 

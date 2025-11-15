@@ -74,32 +74,32 @@ export function WalletConnect({ addressOverride }: { addressOverride?: string } 
   if ((isConnected && address) || addressOverride) {
     return (
       <Card className="border-border/50 bg-gradient-card backdrop-blur-xl">
-        <div className="p-4">
+        <div className="p-3">
           {chainId !== base.id && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Please switch to Base network to mint
+            <Alert variant="destructive" className="mb-3 py-2">
+              <AlertCircle className="h-3 w-3" />
+              <AlertDescription className="text-xs">
+                Please switch to Base network
               </AlertDescription>
             </Alert>
           )}
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">Connected Wallet</div>
-              <div className="font-mono text-sm font-bold text-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-muted-foreground mb-0.5">Connected Wallet</div>
+              <div className="font-mono text-xs font-bold text-foreground truncate">
                 {formatAddress(address)}
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-muted-foreground mt-0.5">
                 {chainId === base.id ? "Base Network" : "Wrong Network"}
               </div>
             </div>
             <Button
               onClick={handleDisconnect}
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="border-destructive/30 hover:bg-destructive/10"
+              className="h-8 w-8 p-0 hover:bg-destructive/10"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3 h-3" />
             </Button>
           </div>
         </div>
