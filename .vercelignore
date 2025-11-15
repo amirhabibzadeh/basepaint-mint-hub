@@ -1,6 +1,7 @@
 node_modules
 .next
-dist
 .vite
 *.log
+# Don't ignore dist - it's needed for static files
+# Don't ignore api - it's needed for serverless functions
 

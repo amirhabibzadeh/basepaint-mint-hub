@@ -1,7 +1,13 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/.well-known/farcaster.json",
@@ -9,4 +15,3 @@
     }
   ]
 }
-
