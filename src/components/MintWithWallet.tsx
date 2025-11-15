@@ -81,7 +81,7 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
   // Handle transaction success/error
   useEffect(() => {
     if (isSuccess && txHash) {
-      toast.success('Transaction submitted', { description: txHash });
+      toast.success('Mint successful', { description: txHash });
     }
     if (isError && txError) {
       console.error('Mint error:', txError);
