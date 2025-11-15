@@ -174,6 +174,12 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
         </Button>
       </div>
 
+      {referralId && (
+        <div className="text-xs text-muted-foreground">
+          Referral: {referralId.slice(0, 8)}...
+        </div>
+      )}
+
       {/* Mint Button */}
       <Button
         onClick={handleMint}
@@ -185,11 +191,6 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
         {isSubmitting
           ? "Minting..."
           : `Mint Canvas #${canvasId} (${formatWeiToEth(price * BigInt(count))} ETH)`}
-        {referralId && (
-          <span className="ml-2 text-xs opacity-80">
-            (ref: {referralId.slice(0, 8)}...)
-          </span>
-        )}
       </Button>
     </div>
   );
