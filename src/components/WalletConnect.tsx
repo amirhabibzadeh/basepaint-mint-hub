@@ -9,8 +9,9 @@ import { useEffect, useRef, useState } from "react";
 import { base } from "wagmi/chains";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export function WalletConnect() {
-  const { address, isConnected } = useAccount();
+export function WalletConnect({ addressOverride }: { addressOverride?: string } = {}) {
+  const { address: wagmiAddress, isConnected } = useAccount();
+  const address = addressOverride || wagmiAddress;
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
@@ -58,7 +59,7 @@ export function WalletConnect() {
     toast.success("Wallet disconnected");
   };
 
-  if (isConnected && address) {
+  if ((isConnected && address) || addressOverride) {
     return (
       <Card className="border-border/50 bg-gradient-card backdrop-blur-xl">
         <div className="p-4">

@@ -9,7 +9,7 @@ import { useFarcaster } from "@/providers/FarcasterProvider";
 import { LogIn, User } from "lucide-react";
 import { toast } from "sonner";
 
-export function FarcasterAuth() {
+export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLogin, setAutoLogin] = useState(false);
@@ -108,24 +108,24 @@ export function FarcasterAuth() {
 
   if (user) {
     return (
-      <Card className="border-border/50 bg-gradient-card backdrop-blur-xl">
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+      <Card className={`border-border/50 bg-gradient-card backdrop-blur-xl${compact ? ' p-2' : ''}`} style={compact ? { minWidth: 0, maxWidth: 220 } : {}}>
+        <div className={compact ? 'p-2' : 'p-4'}>
+          <div className={`flex items-center ${compact ? 'gap-2' : 'gap-3'}`}>
+            <Avatar className={compact ? 'w-8 h-8 ring-1 ring-primary/20' : 'w-12 h-12 ring-2 ring-primary/20'}>
               <AvatarImage src={user.pfpUrl} alt={user.username} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                <User className="w-6 h-6" />
+                <User className={compact ? 'w-4 h-4' : 'w-6 h-6'} />
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="font-bold text-foreground">
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold text-foreground truncate ${compact ? 'text-sm' : ''}`}>
                 {user.displayName || user.username || 'Farcaster User'}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className={`${compact ? 'text-xs' : 'text-sm'} text-muted-foreground truncate`}>
                 FID: {user.fid}
                 {user.username && ` • @${user.username}`}
               </div>
-              {user.walletAddress && (
+              {user.walletAddress && !compact && (
                 <div className="text-xs text-muted-foreground mt-1 font-mono">
                   {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
                 </div>

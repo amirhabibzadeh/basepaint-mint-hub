@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
+import { useFarcasterUser } from "@/hooks/useFarcasterUser";
 import { getFarcasterContext } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ const Index = () => {
   const [refLink, setRefLink] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
   const [isFarcasterConnected, setIsFarcasterConnected] = useState(false);
+  const farcasterUser = useFarcasterUser();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -153,22 +155,33 @@ const Index = () => {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Priority: show wallet when connected. If not connected, show Farcaster + connect button(s). */}
+          <div className="flex items-center gap-2">
+            {/* Show wallet if connected. If not, show Farcaster + connect button(s). If Farcaster is connected and user has wallet, show both. */}
             {isConnected ? (
-              <div className="w-64">
+              <div className="w-40">
                 <WalletConnect />
               </div>
             ) : isFarcasterConnected ? (
-              <div className="w-64">
-                <FarcasterAuth />
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div className="w-56">
-                  <FarcasterAuth />
+              farcasterUser?.walletAddress ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-32">
+                    <FarcasterAuth compact />
+                  </div>
+                  <div className="w-32">
+                    <WalletConnect addressOverride={farcasterUser.walletAddress} />
+                  </div>
                 </div>
-                <div className="w-56">
+              ) : (
+                <div className="w-40">
+                  <FarcasterAuth compact />
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-32">
+                  <FarcasterAuth compact />
+                </div>
+                <div className="w-32">
                   <WalletConnect />
                 </div>
               </div>
