@@ -70,19 +70,24 @@ const Index = () => {
   });
 
   // Update og-image and Farcaster embed meta tags when canvasId is available
+  // This overwrites the static fallback meta tags from index.html with dynamic canvas artwork
   useEffect(() => {
     if (canvasId) {
+      // Get dynamic canvas artwork URL
       const imageUrl = getArtworkUrl(canvasId);
-      updateOgImage(imageUrl);
       
-      // Inject Farcaster embed metadata for the base page URL
+      // Update Open Graph and Twitter meta tags with dynamic image and canvas info
+      updateOgImage(imageUrl, canvasId);
+      
+      // Overwrite/update Farcaster embed meta tags (fc:miniapp and fc:frame) with dynamic imageUrl
       const baseUrl = window.location.origin + window.location.pathname;
       const embedJson = generateMiniappEmbed(baseUrl, {
-        imageUrl,
+        imageUrl, // Dynamic canvas artwork URL
         buttonTitle: "🎨 Mint Canvas",
         buttonUrl: baseUrl,
         appName: "BasePaint Mint Hub"
       });
+      // This function removes existing meta tags and injects new ones with dynamic imageUrl
       injectEmbedMeta(embedJson);
     }
   }, [canvasId]);
@@ -93,17 +98,31 @@ const Index = () => {
       const link = `${window.location.origin}?referrer=${address}`;
       setRefLink(link);
       
-      // Inject embed metadata for rich sharing on Farcaster with referral link
+      // Overwrite meta tags with referral link and dynamic canvas artwork imageUrl
+      // Always use dynamic imageUrl if canvasId is available, otherwise fallback
       const imageUrl = canvasId ? getArtworkUrl(canvasId) : "https://basepaint-mint-hub.lovable.app/og-image.png";
       const embedJson = generateMiniappEmbed(link, {
-        imageUrl,
+        imageUrl, // Dynamic canvas artwork URL when available
         buttonTitle: "🎨 Mint Canvas",
         buttonUrl: link,
         appName: "BasePaint Mint Hub"
       });
+      // This overwrites existing fc:miniapp and fc:frame meta tags with new dynamic imageUrl
       injectEmbedMeta(embedJson);
     } else {
       setRefLink(null);
+      // When wallet disconnects, restore base page embed with dynamic canvas image
+      if (canvasId) {
+        const imageUrl = getArtworkUrl(canvasId);
+        const baseUrl = window.location.origin + window.location.pathname;
+        const embedJson = generateMiniappEmbed(baseUrl, {
+          imageUrl,
+          buttonTitle: "🎨 Mint Canvas",
+          buttonUrl: baseUrl,
+          appName: "BasePaint Mint Hub"
+        });
+        injectEmbedMeta(embedJson);
+      }
     }
   }, [isConnected, address, canvasId]);
 

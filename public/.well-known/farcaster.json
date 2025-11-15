@@ -9,7 +9,7 @@
     "name": "BasePaint Mint Hub",
     "iconUrl": "https://basepaint.xyz/logo.png",
     "homeUrl": "https://basepaint-mint-hub.lovable.app/",
-    "splashImageUrl": "https://basepaint.xyz/logo.png",
+    "splashImageUrl": "https://basepaint-mint-hub.lovable.app/og-image.png",
     "splashBackgroundColor": "#000000",
     "subtitle": "Collaborative on-chain art",
     "description": "Mint and contribute pixels to collaborative on-chain art canvases on Base Network. Earn protocol fees from referrals.",

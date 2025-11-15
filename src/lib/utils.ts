@@ -54,12 +54,29 @@ export function generateMiniappEmbed(url: string, options: EmbedOptions): string
  * Inject embed meta tags into page head for rich sharing
  * Call this when you want to make a page shareable on Farcaster
  * 
- * @param embedJson - JSON string from generateMiniappEmbed()
+ * This function OVERWRITES any existing fc:miniapp and fc:frame meta tags
+ * (including static fallback tags from index.html) with new dynamic content.
+ * 
+ * @param embedJson - JSON string from generateMiniappEmbed() containing dynamic imageUrl
  */
 export function injectEmbedMeta(embedJson: string): void {
-  // Remove existing meta tags if any
+  // Remove existing meta tags (including static fallback from index.html)
+  // This ensures we always overwrite with the latest dynamic imageUrl
   const existing = document.querySelectorAll('meta[name="fc:miniapp"], meta[name="fc:frame"]');
   existing.forEach(el => el.remove());
+
+  // Parse the JSON to create backward-compatible version for fc:frame
+  const embed = JSON.parse(embedJson);
+  const frameEmbed = {
+    ...embed,
+    button: {
+      ...embed.button,
+      action: {
+        ...embed.button.action,
+        type: "launch_frame" // Backward compatibility
+      }
+    }
+  };
 
   // Add fc:miniapp meta tag (primary)
   const miniappMeta = document.createElement('meta');
@@ -67,19 +84,20 @@ export function injectEmbedMeta(embedJson: string): void {
   miniappMeta.setAttribute('content', embedJson);
   document.head.appendChild(miniappMeta);
 
-  // Add fc:frame meta tag (backward compatibility)
+  // Add fc:frame meta tag (backward compatibility with launch_frame type)
   const frameMeta = document.createElement('meta');
   frameMeta.setAttribute('name', 'fc:frame');
-  frameMeta.setAttribute('content', embedJson);
+  frameMeta.setAttribute('content', JSON.stringify(frameEmbed));
   document.head.appendChild(frameMeta);
 }
 
 /**
- * Update Open Graph and Twitter meta tags for dynamic og-image
+ * Update Open Graph and Twitter meta tags for dynamic og-image and canvas info
  * 
  * @param imageUrl - The URL of the og-image to set
+ * @param canvasId - Optional canvas ID to include in title and description
  */
-export function updateOgImage(imageUrl: string): void {
+export function updateOgImage(imageUrl: string, canvasId?: number): void {
   // Update or create og:image meta tag
   let ogImage = document.querySelector('meta[property="og:image"]');
   if (!ogImage) {
@@ -97,6 +115,48 @@ export function updateOgImage(imageUrl: string): void {
     document.head.appendChild(twitterImage);
   }
   twitterImage.setAttribute('content', imageUrl);
+
+  // Update title and description if canvasId is provided
+  if (canvasId !== undefined) {
+    const title = `BasePaint Mint Hub - Canvas #${canvasId}`;
+    const description = `Mint Canvas #${canvasId} - Collaborative on-chain art canvas on Base Network. Earn protocol fees from referrals.`;
+
+    // Update og:title
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta');
+      ogTitle.setAttribute('property', 'og:title');
+      document.head.appendChild(ogTitle);
+    }
+    ogTitle.setAttribute('content', title);
+
+    // Update twitter:title
+    let twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (!twitterTitle) {
+      twitterTitle = document.createElement('meta');
+      twitterTitle.setAttribute('name', 'twitter:title');
+      document.head.appendChild(twitterTitle);
+    }
+    twitterTitle.setAttribute('content', title);
+
+    // Update og:description
+    let ogDescription = document.querySelector('meta[property="og:description"]');
+    if (!ogDescription) {
+      ogDescription = document.createElement('meta');
+      ogDescription.setAttribute('property', 'og:description');
+      document.head.appendChild(ogDescription);
+    }
+    ogDescription.setAttribute('content', description);
+
+    // Update twitter:description
+    let twitterDescription = document.querySelector('meta[name="twitter:description"]');
+    if (!twitterDescription) {
+      twitterDescription = document.createElement('meta');
+      twitterDescription.setAttribute('name', 'twitter:description');
+      document.head.appendChild(twitterDescription);
+    }
+    twitterDescription.setAttribute('content', description);
+  }
 }
 
 /**
