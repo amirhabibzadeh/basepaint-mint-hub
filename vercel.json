@@ -7,6 +7,16 @@
     {
       "source": "/.well-known/farcaster.json",
       "destination": "/api/farcaster.json"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "day"
+        }
+      ],
+      "destination": "/api/html"
     }
   ]
 }

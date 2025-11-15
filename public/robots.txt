@@ -1,14 +1,19 @@
 User-agent: Googlebot
 Allow: /
+Allow: /api/og/*
 
 User-agent: Bingbot
 Allow: /
+Allow: /api/og/*
 
 User-agent: Twitterbot
 Allow: /
+Allow: /api/og/*
 
 User-agent: facebookexternalhit
 Allow: /
+Allow: /api/og/*
 
 User-agent: *
 Allow: /
+Allow: /api/og/*
