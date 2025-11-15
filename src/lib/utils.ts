@@ -22,26 +22,92 @@ export interface EmbedOptions {
   splashBackgroundColor?: string;
 }
 
+/**
+ * Ensures a URL is an absolute HTTPS URL (not relative, localhost, or IP address)
+ * @param url - The URL to validate/convert
+ * @param fallbackOrigin - Fallback origin if url is relative (defaults to window.location.origin)
+ * @returns Absolute HTTPS URL
+ */
+function ensureAbsoluteHttpsUrl(url: string, fallbackOrigin?: string): string {
+  // If already absolute HTTPS URL, validate it's not localhost or IP
+  if (url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+      
+      // Reject localhost and IP addresses
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+        throw new Error(`Invalid URL: ${url} - Cannot use localhost or IP addresses`);
+      }
+      
+      return url;
+    } catch (e) {
+      throw new Error(`Invalid URL: ${url} - ${e instanceof Error ? e.message : 'Invalid URL format'}`);
+    }
+  }
+  
+  // If relative URL, convert to absolute using fallback origin
+  const origin = fallbackOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
+  if (!origin) {
+    throw new Error(`Cannot convert relative URL ${url} to absolute - no origin available`);
+  }
+  
+  // Ensure origin is HTTPS
+  if (!origin.startsWith('https://')) {
+    throw new Error(`Origin must be HTTPS: ${origin}`);
+  }
+  
+  // Convert relative to absolute
+  const absoluteUrl = url.startsWith('/') 
+    ? `${origin}${url}` 
+    : `${origin}/${url}`;
+  
+  // Validate the resulting URL
+  try {
+    const urlObj = new URL(absoluteUrl);
+    const hostname = urlObj.hostname;
+    
+    // Reject localhost and IP addresses
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      throw new Error(`Invalid URL: ${absoluteUrl} - Cannot use localhost or IP addresses`);
+    }
+    
+    return absoluteUrl;
+  } catch (e) {
+    throw new Error(`Invalid URL: ${absoluteUrl} - ${e instanceof Error ? e.message : 'Invalid URL format'}`);
+  }
+}
+
 export function generateMiniappEmbed(url: string, options: EmbedOptions): string {
   const {
     imageUrl,
     buttonTitle = "🎨 Mint Canvas",
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
-    splashImageUrl = imageUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/og-image.png`,
+    splashImageUrl = imageUrl,
     splashBackgroundColor = "#000000"
   } = options;
 
+  // Get fallback origin for relative URLs
+  const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+  
+  // Ensure all URLs are absolute HTTPS URLs
+  const absoluteImageUrl = ensureAbsoluteHttpsUrl(imageUrl, fallbackOrigin);
+  const absoluteButtonUrl = ensureAbsoluteHttpsUrl(buttonUrl, fallbackOrigin);
+  const absoluteSplashImageUrl = splashImageUrl 
+    ? ensureAbsoluteHttpsUrl(splashImageUrl, fallbackOrigin)
+    : absoluteImageUrl;
+
   const miniappEmbed = {
     version: "1",
-    imageUrl,
+    imageUrl: absoluteImageUrl,
     button: {
       title: buttonTitle,
       action: {
         type: "launch_miniapp",
-        url: buttonUrl,
+        url: absoluteButtonUrl,
         name: appName,
-        splashImageUrl,
+        splashImageUrl: absoluteSplashImageUrl,
         splashBackgroundColor
       }
     }
