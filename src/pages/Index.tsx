@@ -11,9 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
-import { getFarcasterContext } from "@/lib/farcaster";
+import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 const Index = () => {
   const [referralId, setReferralId] = useState<string | null>(null);
@@ -116,16 +117,31 @@ const Index = () => {
     }
   };
 
-  const shareToFarcaster = () => {
+  const shareToFarcaster = async () => {
     if (!refLink) return;
-    const text = `Mint on BasePaint: ${refLink}\n\nEarn 10% of protocol fees on referrals! 💰`;
-    // Try opening Warpcast compose with prefilled text (best-effort)
-    const warpUrl = `https://warpcast.com/compose?text=${encodeURIComponent(text)}`;
+    
     try {
-      window.open(warpUrl, '_blank');
+      // Initialize SDK if not already initialized
+      await initializeFarcasterSDK();
+      
+      const text = `Mint on BasePaint: ${refLink}\n\nEarn 10% of protocol fees on referrals! 💰`;
+      
+      // Use the Farcaster Mini App SDK to compose a cast
+      const result = await sdk.actions.composeCast({
+        text,
+        embeds: [refLink], // Include the referral link as an embed
+      }) as { cast: { hash: string; channelKey?: string } | null } | undefined;
+      
+      // result can be undefined if close is set to true, or cast can be null if user cancels
+      if (result?.cast) {
+        toast.success('Cast posted successfully!');
+      } else if (result && result.cast === null) {
+        // User cancelled - no need to show error
+        console.log('User cancelled cast composition');
+      }
     } catch (err) {
-      // Fallback: open the Farcaster share-extension docs
-      window.open('https://miniapps.farcaster.xyz/docs/guides/share-extension', '_blank');
+      console.error('Failed to compose cast:', err);
+      toast.error('Failed to share to Farcaster. Please try again.');
     }
   };
 
