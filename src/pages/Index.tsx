@@ -143,7 +143,7 @@ const Index = () => {
       // Initialize SDK if not already initialized
       await initializeFarcasterSDK();
       
-      const text = `Mint on BasePaint: ${refLink}\n\nEarn 10% of protocol fees on referrals! 💰`;
+      const text = `Mint this fantastic Collaborative Artwork on BasePaint: ${refLink}\n\n`;
       
       // Use the Farcaster Mini App SDK to compose a cast
       const result = await sdk.actions.composeCast({
