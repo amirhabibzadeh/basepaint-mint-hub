@@ -17,7 +17,19 @@ export function WalletConnect({ addressOverride }: { addressOverride?: string } 
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const [open, setOpen] = useState(false);
+  const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+
+  // Auto-connect to Farcaster wallet if available (inside miniapp)
+  useEffect(() => {
+    if (!isConnected && !autoConnectAttempted) {
+      const farcasterConnector = connectors.find(c => c.id === 'farcasterMiniApp');
+      if (farcasterConnector) {
+        setAutoConnectAttempted(true);
+        connect({ connector: farcasterConnector });
+      }
+    }
+  }, [isConnected, connectors, connect, autoConnectAttempted]);
 
   // Auto-switch to Base if connected to wrong chain
   useEffect(() => {
@@ -109,18 +121,26 @@ export function WalletConnect({ addressOverride }: { addressOverride?: string } 
         <div className="absolute right-0 mt-2 w-56 bg-card border border-border/50 rounded-lg shadow-lg p-3 z-50">
           <div className="text-sm text-muted-foreground mb-2">Connect your wallet to mint</div>
           <div className="space-y-2">
-            {connectors
+            {[...connectors]
+              // Sort to prioritize Farcaster connector
+              .sort((a, b) => {
+                if (a.id === 'farcasterMiniApp') return -1;
+                if (b.id === 'farcasterMiniApp') return 1;
+                return 0;
+              })
               .filter((connector) => connector.id !== 'injected' || connector.name !== 'Injected')
               .map((connector) => (
                 <Button
                   key={connector.id}
                   onClick={() => { setOpen(false); handleConnect(connector); }}
                   disabled={isPending}
-                  variant="outline"
-                  className="w-full justify-start border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                  variant={connector.id === 'farcasterMiniApp' ? 'default' : 'outline'}
+                  className={connector.id === 'farcasterMiniApp' 
+                    ? "w-full justify-start" 
+                    : "w-full justify-start border-primary/30 hover:bg-primary/10 hover:border-primary/50"}
                 >
                   <Wallet className="w-4 h-4 mr-2" />
-                  {connector.name === 'Injected' ? 'Browser Wallet' : connector.name}
+                  {connector.id === 'farcasterMiniApp' ? 'Farcaster Wallet' : connector.name}
                 </Button>
               ))}
           </div>
