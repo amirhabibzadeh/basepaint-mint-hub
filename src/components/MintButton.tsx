@@ -31,7 +31,7 @@ export function MintButton({ canvasId, referralId }: MintButtonProps) {
       className="w-full bg-gradient-primary text-primary-foreground font-bold text-lg py-6 shadow-glow hover:shadow-glow hover:scale-105 transition-all duration-300 animate-pulse-glow"
     >
       <Sparkles className="w-5 h-5 mr-2" />
-      Mint Canvas #{canvasId}
+      Mint BasePaint Artwork #{canvasId}
       {referralId && (
         <span className="ml-2 text-xs opacity-80">
           (ref: {referralId.slice(0, 8)}...)

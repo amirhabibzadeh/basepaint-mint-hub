@@ -83,7 +83,7 @@ const Index = () => {
       const baseUrl = window.location.origin + window.location.pathname;
       const embedJson = generateMiniappEmbed(baseUrl, {
         imageUrl, // Dynamic canvas artwork URL
-        buttonTitle: "🎨 Mint Canvas",
+        buttonTitle: "🎨 Mint BasePaint Artwork",
         buttonUrl: baseUrl,
         appName: "BasePaint Mint Hub"
       });
@@ -103,7 +103,7 @@ const Index = () => {
       const imageUrl = canvasId ? getArtworkUrl(canvasId) : `${window.location.origin}/og-image.png`;
       const embedJson = generateMiniappEmbed(link, {
         imageUrl, // Dynamic canvas artwork URL when available
-        buttonTitle: "🎨 Mint Canvas",
+        buttonTitle: "🎨 Mint BasePaint Artwork",
         buttonUrl: link,
         appName: "BasePaint Mint Hub"
       });
@@ -117,7 +117,7 @@ const Index = () => {
         const baseUrl = window.location.origin + window.location.pathname;
         const embedJson = generateMiniappEmbed(baseUrl, {
           imageUrl,
-          buttonTitle: "🎨 Mint Canvas",
+          buttonTitle: "🎨 Mint BasePaint Artwork",
           buttonUrl: baseUrl,
           appName: "BasePaint Mint Hub"
         });
@@ -162,7 +162,7 @@ const Index = () => {
       // Initialize SDK if not already initialized
       await initializeFarcasterSDK();
       
-      const text = `Mint this fantastic Collaborative Artwork on BasePaint: ${refLink}\n\n`;
+      const text = `Mint this collaborative artwork on BasePaint or share it with friends to earn 10 percent of the rewards. ${refLink}\n\n`;
       
       // Use the Farcaster Mini App SDK to compose a cast
       const result = await sdk.actions.composeCast({

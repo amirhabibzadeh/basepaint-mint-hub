@@ -190,7 +190,7 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
         <Sparkles className="w-5 h-5 mr-2" />
         {isSubmitting
           ? "Minting..."
-          : `Mint Canvas #${canvasId} (${formatWeiToEth(price * BigInt(count))} ETH)`}
+          : `Mint BasePaint Artwork #${canvasId} (${formatWeiToEth(price * BigInt(count))} ETH)`}
       </Button>
     </div>
   );

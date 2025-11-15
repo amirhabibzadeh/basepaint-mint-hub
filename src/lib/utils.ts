@@ -81,7 +81,7 @@ function ensureAbsoluteHttpsUrl(url: string, fallbackOrigin?: string): string {
 export function generateMiniappEmbed(url: string, options: EmbedOptions): string {
   const {
     imageUrl,
-    buttonTitle = "🎨 Mint Canvas",
+    buttonTitle = "🎨 Mint BasePaint Artwork",
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
     splashImageUrl = imageUrl,
@@ -185,7 +185,7 @@ export function updateOgImage(imageUrl: string, canvasId?: number): void {
   // Update title and description if canvasId is provided
   if (canvasId !== undefined) {
     const title = `BasePaint Mint Hub - Canvas #${canvasId}`;
-    const description = `Mint Canvas #${canvasId} - Collaborative on-chain art canvas on Base Network. Earn protocol fees from referrals.`;
+    const description = `Mint BasePaint Artwork #${canvasId} - Collaborative on-chain art canvas on Base Network. Earn protocol fees from referrals.`;
 
     // Update og:title
     let ogTitle = document.querySelector('meta[property="og:title"]');
