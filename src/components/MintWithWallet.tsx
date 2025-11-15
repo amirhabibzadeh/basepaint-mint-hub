@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
-import { useAccount } from "wagmi";
+import { useAccount, useSendTransaction } from "wagmi";
 import { parseAbi, encodeFunctionData } from "viem";
 import { base } from "wagmi/chains";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Helper to format wei to ETH
 function formatWeiToEth(wei: bigint): string {
@@ -35,8 +35,21 @@ interface MintWithWalletProps {
 
 export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count: initialCount = 1 }: MintWithWalletProps) {
   const [count, setCount] = useState(initialCount);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { address, isConnected, chainId } = useAccount();
+  const { sendTransaction, isPending: isSubmitting, data: txHash, error: txError, isSuccess, isError } = useSendTransaction();
+
+  // Handle transaction success/error
+  useEffect(() => {
+    if (isSuccess && txHash) {
+      toast.success('Transaction submitted', { description: txHash });
+    }
+    if (isError && txError) {
+      console.error('Mint error:', txError);
+      toast.error("Mint failed", {
+        description: txError.message || "Unknown error",
+      });
+    }
+  }, [isSuccess, isError, txHash, txError]);
 
   const handleMint = async () => {
     if (!isConnected || !address) {
@@ -58,30 +71,12 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
         args: [BigInt(canvasId), address as `0x${string}`, BigInt(count), refToSend as `0x${string}`],
       });
 
-      // Send transaction to the wrapper contract address
-      const valueHex = `0x${(price * BigInt(count)).toString(16)}`;
-      const txParams = {
-        from: address,
-        to: WRAPPER_ADDRESS,
+      // Send transaction using wagmi's sendTransaction hook
+      sendTransaction({
+        to: WRAPPER_ADDRESS as `0x${string}`,
         data,
-        value: valueHex,
-      } as const;
-
-      type EthereumProvider = { request(args: { method: string; params?: unknown[] }): Promise<string> };
-      const ethProvider = (window as unknown as { ethereum?: EthereumProvider }).ethereum;
-      if (ethProvider?.request) {
-        try {
-          setIsSubmitting(true);
-          const txHash = await ethProvider.request({ method: 'eth_sendTransaction', params: [txParams] });
-          toast.success('Transaction submitted', { description: txHash });
-        } finally {
-          setIsSubmitting(false);
-        }
-      } else {
-        // As a fallback, open the mint page with referrer query so user can mint manually
-        window.open(`${window.location.origin}?referrer=${refToSend}`, '_blank');
-        toast('No injected provider found — opened mint page as fallback');
-      }
+        value: price * BigInt(count),
+      });
     } catch (error) {
       console.error('Mint error:', error);
       toast.error("Mint failed", {
