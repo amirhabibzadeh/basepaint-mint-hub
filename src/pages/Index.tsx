@@ -249,35 +249,37 @@ const Index = () => {
 
             {/* Referral / Share UI (shows when wallet connected). Moved below the mint button */}
             {refLink && (
-              <div className="mt-4 p-4 border border-border/50 rounded-lg bg-background/60 backdrop-blur-sm flex flex-col md:flex-row items-start md:items-center gap-3">
+              <div className="mt-4 p-3 md:p-4 border border-border/50 rounded-lg bg-background/60 backdrop-blur-sm flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-muted-foreground">Your referral link</div>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="text-xs text-muted-foreground mb-1">Your referral link</div>
+                  <div className="flex items-center gap-2">
                     <input
                       readOnly
                       value={refLink}
-                      className="flex-1 font-mono text-sm bg-transparent border border-border/30 px-3 py-2 rounded-md truncate"
+                      className="flex-1 font-mono text-xs md:text-sm bg-transparent border border-border/30 px-2 md:px-3 py-1.5 md:py-2 rounded-md truncate"
                       title="Share this link with others - you earn 10% of protocol fees for mints that use it"
                     />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground mt-1.5">
                     Share this link — you earn 10% of protocol fees for mints that use it. 
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 md:mt-0">
-                  <a href={refLink} target="_blank" rel="noreferrer">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <ExternalLink className="w-3 h-4" />
-                      Open Mint
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
+                  <a href={refLink} target="_blank" rel="noreferrer" className="flex-1 min-w-0">
+                    <Button variant="outline" size="sm" className="w-full text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
+                      <ExternalLink className="w-3 h-3" />
+                      <span className="hidden sm:inline">Open Mint</span>
+                      <span className="sm:hidden">Open</span>
                     </Button>
                   </a>
-                  <Button onClick={copyRef} variant="outline" size="sm" className="flex items-center gap-2">
-                    <Copy className="w-3 h-4" />
+                  <Button onClick={copyRef} variant="outline" size="sm" className="flex-1 min-w-0 text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
+                    <Copy className="w-3 h-3" />
                     Copy
                   </Button>
-                  <Button onClick={shareToFarcaster} variant="outline" size="sm" className="flex items-center gap-2">
-                    <Share2 className="w-3 h-4" />
-                    Share to Farcaster
+                  <Button onClick={shareToFarcaster} variant="outline" size="sm" className="flex-1 min-w-0 text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
+                    <Share2 className="w-3 h-3" />
+                    <span className="hidden sm:inline">Share to Farcaster</span>
+                    <span className="sm:hidden">Share</span>
                   </Button>
                 </div>
               </div>
