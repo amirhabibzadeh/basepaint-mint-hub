@@ -9,8 +9,15 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     allowedHosts: ["basepaint-mint-hub.loca.lt"],
-    // In development, Vite will serve API routes directly
-    // In production on Vercel, API routes are handled automatically
+    proxy: {
+      // Proxy API image route directly to basepaint.xyz for local development
+      // This allows testing without vercel dev
+      '/api/art/image': {
+        target: 'https://basepaint.xyz',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

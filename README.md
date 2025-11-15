@@ -41,40 +41,42 @@ npm run dev
 
 ## Testing API Routes Locally
 
-To test the Vercel serverless functions (API routes) locally, you have two options:
+### Option 1: Quick Testing with Vite (Image API Only)
 
-### Option 1: Using Vercel CLI (Recommended)
-
-This runs both the Vite dev server and API routes together, exactly as they'll work in production:
-
-```bash
-# Install Vercel CLI globally (if not already installed)
-npm i -g vercel
-
-# Or use npx (no global install needed)
-npx vercel dev
-```
-
-This will:
-- Start Vite dev server on port 3000 (or next available)
-- Serve API routes from `/api` directory
-- Handle `/.well-known` routes via `vercel.json` rewrites
-- Provide the same environment as production
-
-**Test the endpoints:**
-- `http://localhost:3000/api/art/image?day=829` - Test image generation
-- `http://localhost:3000/api/farcaster.json?day=829` - Test Farcaster JSON
-- `http://localhost:3000/.well-known/farcaster.json?day=829` - Test well-known path
-
-### Option 2: Frontend Only (API routes won't work)
-
-If you just want to test the frontend without API routes:
+For quick local testing, the image API route is proxied directly to `basepaint.xyz`:
 
 ```bash
 npm run dev
 ```
 
-This starts only the Vite dev server. The frontend will work, but API routes won't be available locally (they'll work in production on Vercel).
+Then test:
+- `http://localhost:8080/api/art/image?day=829` ✅ Works (proxied to basepaint.xyz)
+- `http://localhost:8080/api/farcaster.json?day=829` ❌ Won't work (needs vercel dev)
+- `http://localhost:8080/.well-known/farcaster.json?day=829` ❌ Won't work (needs vercel dev)
+
+### Option 2: Full API Testing with Vercel Dev (Recommended)
+
+For full API route testing (including Farcaster JSON), use Vercel dev:
+
+```bash
+# Use npx (no installation needed)
+npx vercel dev
+
+# Or install globally first
+npm i -g vercel
+vercel dev
+```
+
+This will:
+- Start the dev server (usually on port 3000)
+- Serve ALL API routes from `/api` directory
+- Handle `/.well-known` routes via `vercel.json` rewrites
+- Provide the same environment as production
+
+**Test the endpoints on the port shown by `vercel dev` (usually 3000):**
+- `http://localhost:3000/api/art/image?day=829` ✅ Full API support
+- `http://localhost:3000/api/farcaster.json?day=829` ✅ Full API support
+- `http://localhost:3000/.well-known/farcaster.json?day=829` ✅ Full API support
 
 **Edit a file directly in GitHub**
 
