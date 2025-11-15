@@ -18,6 +18,13 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
   const farcaster = useFarcaster();
   const providerUser = farcaster?.user ?? null;
 
+  // Sync provider user to local state immediately
+  useEffect(() => {
+    if (providerUser) {
+      setUser(providerUser);
+    }
+  }, [providerUser]);
+
   useEffect(() => {
     let cancelled = false;
     const checkAuth = async () => {
@@ -50,8 +57,6 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
     try {
       // Emit a window event so pages (like Index) can react to Farcaster sign-in
       window.dispatchEvent(new CustomEvent('farcaster:auth', { detail: providerUser }));
-      // Mirror provider user into local UI state for backwards compatibility
-      setUser(providerUser);
     } catch (e) {
       // ignore
     }
@@ -108,22 +113,21 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
 
   if (user) {
     return (
-      <Card className={`border-border/50 bg-gradient-card backdrop-blur-xl${compact ? ' p-2' : ''}`} style={compact ? { minWidth: 0, maxWidth: 220 } : {}}>
+      <Card className="border-border/50 bg-gradient-card backdrop-blur-xl" style={compact ? { minWidth: 0 } : {}}>
         <div className={compact ? 'p-2' : 'p-4'}>
           <div className={`flex items-center ${compact ? 'gap-2' : 'gap-3'}`}>
-            <Avatar className={compact ? 'w-8 h-8 ring-1 ring-primary/20' : 'w-12 h-12 ring-2 ring-primary/20'}>
+            <Avatar className={compact ? 'w-7 h-7 ring-1 ring-primary/20' : 'w-12 h-12 ring-2 ring-primary/20'}>
               <AvatarImage src={user.pfpUrl} alt={user.username} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                <User className={compact ? 'w-4 h-4' : 'w-6 h-6'} />
+                <User className={compact ? 'w-3 h-3' : 'w-6 h-6'} />
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className={`font-bold text-foreground truncate ${compact ? 'text-sm' : ''}`}>
+              <div className={`font-bold text-foreground truncate ${compact ? 'text-xs' : ''}`}>
                 {user.displayName || user.username || 'Farcaster User'}
               </div>
-              <div className={`${compact ? 'text-xs' : 'text-sm'} text-muted-foreground truncate`}>
+              <div className={`${compact ? 'text-[10px]' : 'text-sm'} text-muted-foreground truncate`}>
                 FID: {user.fid}
-                {user.username && ` • @${user.username}`}
               </div>
               {user.walletAddress && !compact && (
                 <div className="text-xs text-muted-foreground mt-1 font-mono">

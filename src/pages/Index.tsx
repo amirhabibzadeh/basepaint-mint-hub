@@ -158,30 +158,30 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {/* Show wallet if connected. If not, show Farcaster + connect button(s). If Farcaster is connected and user has wallet, show both. */}
             {isConnected ? (
-              <div className="w-40">
+              <div className="max-w-[200px]">
                 <WalletConnect />
               </div>
             ) : isFarcasterConnected ? (
               farcasterUser?.walletAddress ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-32">
+                  <div className="max-w-[160px]">
                     <FarcasterAuth compact />
                   </div>
-                  <div className="w-32">
+                  <div className="max-w-[160px]">
                     <WalletConnect addressOverride={farcasterUser.walletAddress} />
                   </div>
                 </div>
               ) : (
-                <div className="w-40">
+                <div className="max-w-[200px]">
                   <FarcasterAuth compact />
                 </div>
               )
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-32">
+                <div className="max-w-[140px]">
                   <FarcasterAuth compact />
                 </div>
-                <div className="w-32">
+                <div className="max-w-[140px]">
                   <WalletConnect />
                 </div>
               </div>
