@@ -6,6 +6,46 @@ import { parseAbi, encodeFunctionData } from "viem";
 import { base } from "wagmi/chains";
 import { useState, useEffect } from "react";
 
+// Helper to check if error is user rejection
+function isUserRejection(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as Record<string, unknown>;
+  // Check for common user rejection patterns
+  if (err.code === 4001) return true; // User rejected request
+  if (err.name === 'UserRejectedRequestError') return true;
+  const message = String(err.message || '').toLowerCase();
+  return message.includes('user rejected') || 
+         message.includes('user denied') || 
+         message.includes('rejected') ||
+         message.includes('denied transaction');
+}
+
+// Component for countdown toast
+function CountdownToast({ initialSeconds }: { initialSeconds: number }) {
+  const [seconds, setSeconds] = useState(initialSeconds);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds((prev) => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2">
+      <span>User cancelled</span>
+      {seconds > 0 && (
+        <span className="text-muted-foreground">({seconds}s)</span>
+      )}
+    </div>
+  );
+}
+
 // Helper to format wei to ETH
 function formatWeiToEth(wei: bigint): string {
   const eth = Number(wei) / 1e18;
@@ -45,6 +85,15 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
     }
     if (isError && txError) {
       console.error('Mint error:', txError);
+      
+      // Check if user cancelled the transaction
+      if (isUserRejection(txError)) {
+        toast.error(<CountdownToast initialSeconds={3} />, {
+          duration: 3000,
+        });
+        return;
+      }
+      
       toast.error("Mint failed", {
         description: txError.message || "Unknown error",
       });
@@ -61,7 +110,7 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
       const refToSend = referralId || DEFAULT_REFERRER;
 
       toast.info("Preparing mint transaction...", {
-        description: `Canvas #${canvasId} with referral ${refToSend.slice(0, 8)}...`,
+        description: `Canvas #${canvasId}`,
       });
 
       // Encode the wrapper mint calldata with the reward recipient as the last parameter
@@ -79,6 +128,15 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
       });
     } catch (error) {
       console.error('Mint error:', error);
+      
+      // Check if user cancelled the transaction
+      if (isUserRejection(error)) {
+        toast.error(<CountdownToast initialSeconds={3} />, {
+          duration: 3000,
+        });
+        return;
+      }
+      
       toast.error("Mint failed", {
         description: error instanceof Error ? error.message : "Unknown error",
       });

@@ -267,20 +267,16 @@ const Index = () => {
                 <div className="flex gap-2 mt-3 md:mt-0">
                   <a href={refLink} target="_blank" rel="noreferrer">
                     <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-3 h-4" />
                       Open Mint
                     </Button>
                   </a>
                   <Button onClick={copyRef} variant="outline" size="sm" className="flex items-center gap-2">
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-3 h-4" />
                     Copy
                   </Button>
-                  <Button onClick={shareRef} variant="ghost" size="sm" className="flex items-center gap-2">
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </Button>
                   <Button onClick={shareToFarcaster} variant="outline" size="sm" className="flex items-center gap-2">
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-3 h-4" />
                     Share to Farcaster
                   </Button>
                 </div>
