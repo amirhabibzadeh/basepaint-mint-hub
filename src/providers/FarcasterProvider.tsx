@@ -35,9 +35,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         setInitialized(true);
 
         // populate context if available
-  const ctx = await getFarcasterContext();
-  if (ctx?.user) setUser(ctx.user as FarcasterUser);
-  if (ctx?.client) setClient(ctx.client as Record<string, unknown>);
+        const ctx = await getFarcasterContext();
+        if (mounted && ctx?.user) setUser(ctx.user as FarcasterUser);
+        if (mounted && ctx?.client) setClient(ctx.client as Record<string, unknown>);
 
         // Listen to client events (if host provides sdk events)
         if (sdk && typeof (sdk as unknown as Record<string, unknown>)['on'] === 'function') {
@@ -46,8 +46,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           };
           const onContext = async () => {
             const updated = await getFarcasterContext();
-            if (updated?.user) setUser(updated.user as FarcasterUser);
-            if (updated?.client) setClient(updated.client as Record<string, unknown>);
+            if (mounted && updated?.user) setUser(updated.user as FarcasterUser);
+            if (mounted && updated?.client) setClient(updated.client as Record<string, unknown>);
           };
 
           const sdkEvents = sdk as unknown as {

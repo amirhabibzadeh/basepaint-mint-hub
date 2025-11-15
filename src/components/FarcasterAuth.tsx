@@ -18,6 +18,13 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
   const farcaster = useFarcaster();
   const providerUser = farcaster?.user ?? null;
 
+  // Sync provider user to local state immediately
+  useEffect(() => {
+    if (providerUser) {
+      setUser(providerUser);
+    }
+  }, [providerUser]);
+
   useEffect(() => {
     let cancelled = false;
     const checkAuth = async () => {
@@ -50,8 +57,6 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
     try {
       // Emit a window event so pages (like Index) can react to Farcaster sign-in
       window.dispatchEvent(new CustomEvent('farcaster:auth', { detail: providerUser }));
-      // Mirror provider user into local UI state for backwards compatibility
-      setUser(providerUser);
     } catch (e) {
       // ignore
     }
