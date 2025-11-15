@@ -4,7 +4,8 @@ import { useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { signInWithFarcaster, getFarcasterContext, FarcasterUser, quickAuthUser, isInMiniApp, hasQuickAuthBeenAttempted, markQuickAuthAsAttempted } from "@/lib/farcaster";
+import { isInMiniApp, hasQuickAuthBeenAttempted, markQuickAuthAsAttempted, FarcasterUser } from "@/lib/farcaster";
+import { useFarcaster } from "@/providers/FarcasterProvider";
 import { LogIn, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,21 +15,21 @@ export function FarcasterAuth() {
   const [autoLogin, setAutoLogin] = useState(false);
   const { connect, connectors } = useConnect();
 
+  const farcaster = useFarcaster();
+  const providerUser = farcaster?.user ?? null;
+
   useEffect(() => {
     let cancelled = false;
     const checkAuth = async () => {
-      // Detect if inside Farcaster MiniApp
+      // Use provider for auth flow; still detect MiniApp for quick auth attempts
       const inMiniApp = await isInMiniApp();
-      // Prevent repeated automatic login attempts globally (prevents duplicates
-      // if FarcasterAuth component is rendered multiple times on the same page)
       if (inMiniApp && !hasQuickAuthBeenAttempted()) {
         markQuickAuthAsAttempted();
         setAutoLogin(true);
         setIsLoading(true);
         try {
-          const quickUser = await quickAuthUser();
+          const quickUser = await farcaster.quickAuth();
           if (!cancelled && quickUser) {
-            setUser(quickUser);
             toast.success(`Welcome, ${quickUser.displayName || quickUser.username || 'Farcaster User'}!`, {
               description: `FID: ${quickUser.fid}`,
             });
@@ -38,47 +39,52 @@ export function FarcasterAuth() {
         } finally {
           if (!cancelled) setIsLoading(false);
         }
-      } else if (!inMiniApp) {
-        // Fallback: check normal context
-        const context = await getFarcasterContext();
-        if (context?.user) {
-          setUser({
-            fid: context.user.fid,
-            username: context.user.username,
-            displayName: context.user.displayName,
-            pfpUrl: context.user.pfpUrl,
-          });
-        }
       }
     };
     checkAuth();
     return () => { cancelled = true; };
-  }, []);
+  }, [farcaster]);
 
   // Notify parent / global listeners about auth state changes
   useEffect(() => {
     try {
       // Emit a window event so pages (like Index) can react to Farcaster sign-in
-      window.dispatchEvent(new CustomEvent('farcaster:auth', { detail: user }));
+      window.dispatchEvent(new CustomEvent('farcaster:auth', { detail: providerUser }));
+      // Mirror provider user into local UI state for backwards compatibility
+      setUser(providerUser);
     } catch (e) {
       // ignore
     }
-  }, [user]);
+  }, [providerUser]);
+
+  // Listen for provider error events and surface them as toasts + console logs
+  useEffect(() => {
+    const onError = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        const message = detail?.error || 'Unknown Farcaster error';
+        console.error('[farcaster] event error', detail);
+        toast.error(`Farcaster error: ${message}`);
+      } catch (err) {
+        console.error('Error handling farcaster:error event', err);
+      }
+    };
+    window.addEventListener('farcaster:error', onError as EventListener);
+    return () => window.removeEventListener('farcaster:error', onError as EventListener);
+  }, []);
 
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      const result = await signInWithFarcaster();
+      const result = await farcaster.signIn();
       if (result) {
-        setUser(result);
         toast.success(`Welcome, ${result.displayName || result.username || 'Farcaster User'}!`, {
           description: `FID: ${result.fid}`,
         });
-        
+
         // Auto-connect wallet if wallet address is available from Farcaster auth
         if (result.walletAddress) {
-          // Find a connector that can connect to this address (e.g., CoinbaseWallet, Injected)
-          const connector = connectors.find(c => 
+          const connector = connectors.find(c =>
             c.id === 'coinbaseWalletSDK' || c.id === 'injected'
           );
           if (connector) {
@@ -86,7 +92,6 @@ export function FarcasterAuth() {
               connect({ connector });
             } catch (err) {
               console.debug('Auto wallet connect attempt:', err);
-              // Non-critical; user can click wallet button manually if needed
             }
           }
         }
@@ -94,6 +99,7 @@ export function FarcasterAuth() {
         toast.error("Sign-in was cancelled or failed");
       }
     } catch (error) {
+      console.error('Farcaster sign-in error:', error);
       toast.error("Failed to sign in with Farcaster");
     } finally {
       setIsLoading(false);

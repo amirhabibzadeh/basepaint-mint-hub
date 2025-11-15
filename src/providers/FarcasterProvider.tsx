@@ -70,6 +70,11 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         }
       } catch (e) {
         console.debug('[farcaster] provider init error', e);
+        try {
+          window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'provider-init', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
+        } catch (err) {
+          // ignore dispatch errors
+        }
       }
     })();
     return () => { mounted = false; };
@@ -82,6 +87,11 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       return u;
     } catch (e) {
       console.error('[farcaster] signIn error', e);
+      try {
+        window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'signIn', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
+      } catch (err) {
+        // ignore
+      }
       return null;
     }
   };
@@ -93,6 +103,11 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       return u;
     } catch (e) {
       console.error('[farcaster] quickAuth error', e);
+      try {
+        window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'quickAuth', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
+      } catch (err) {
+        // ignore
+      }
       return null;
     }
   };

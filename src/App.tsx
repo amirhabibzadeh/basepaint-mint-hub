@@ -8,34 +8,17 @@ import { config } from "@/lib/wagmi";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
-import { initializeFarcasterSDK } from "@/lib/farcaster";
+import FarcasterProvider from "./providers/FarcasterProvider";
 
 const queryClient = new QueryClient();
 
-// Detect if running as a Farcaster miniapp and initialize SDK
-function initializeMiniappSDK() {
-  const url = new URL(window.location.href);
-  const isMiniApp =
-    url.pathname.startsWith("/mini") ||
-    url.searchParams.get("miniApp") === "true";
-
-  if (isMiniApp) {
-    // Use the centralized initializer (it's idempotent so calling multiple
-    // times is safe). This avoids importing/initializing the SDK twice
-    // and prevents repeated ready()/quick-auth loops.
-    initializeFarcasterSDK().catch(err => {
-      console.warn("Failed to initialize Farcaster miniapp SDK:", err);
-    });
-  }
-}
-
 const App = () => {
-  useEffect(() => {
-    initializeMiniappSDK();
-  }, []);
+  // Farcaster initialization is handled by FarcasterProvider (idempotent)
+  useEffect(() => {}, []);
 
   return (
-    <WagmiProvider config={config}>
+    <FarcasterProvider>
+      <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -49,7 +32,8 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+      </WagmiProvider>
+    </FarcasterProvider>
   );
 };
 
