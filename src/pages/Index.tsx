@@ -265,13 +265,6 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 md:gap-2">
-                  <a href={refLink} target="_blank" rel="noreferrer" className="flex-1 min-w-0">
-                    <Button variant="outline" size="sm" className="w-full text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
-                      <ExternalLink className="w-3 h-3" />
-                      <span className="hidden sm:inline">Open Mint</span>
-                      <span className="sm:hidden">Open</span>
-                    </Button>
-                  </a>
                   <Button onClick={copyRef} variant="outline" size="sm" className="flex-1 min-w-0 text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
                     <Copy className="w-3 h-3" />
                     Copy
@@ -279,7 +272,7 @@ const Index = () => {
                   <Button onClick={shareToFarcaster} variant="outline" size="sm" className="flex-1 min-w-0 text-xs h-8 md:h-9 flex items-center justify-center gap-1.5 md:gap-2">
                     <Share2 className="w-3 h-3" />
                     <span className="hidden sm:inline">Share to Farcaster</span>
-                    <span className="sm:hidden">Share</span>
+                    <span className="sm:hidden">Share to Farcaster</span>
                   </Button>
                 </div>
               </div>
