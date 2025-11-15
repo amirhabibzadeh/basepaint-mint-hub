@@ -3,15 +3,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/.well-known/farcaster.json",
-      "destination": "/api/.well-known/farcaster.json"
+      "destination": "/api/farcaster.json"
     }
   ]
 }
