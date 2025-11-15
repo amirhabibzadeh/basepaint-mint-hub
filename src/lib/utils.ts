@@ -28,7 +28,7 @@ export function generateMiniappEmbed(url: string, options: EmbedOptions): string
     buttonTitle = "🎨 Mint Canvas",
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
-    splashImageUrl = "https://basepaint-mint-hub.lovable.app/og-image.png",
+    splashImageUrl = imageUrl || "https://basepaint-mint-hub.lovable.app/og-image.png",
     splashBackgroundColor = "#000000"
   } = options;
 
@@ -72,6 +72,31 @@ export function injectEmbedMeta(embedJson: string): void {
   frameMeta.setAttribute('name', 'fc:frame');
   frameMeta.setAttribute('content', embedJson);
   document.head.appendChild(frameMeta);
+}
+
+/**
+ * Update Open Graph and Twitter meta tags for dynamic og-image
+ * 
+ * @param imageUrl - The URL of the og-image to set
+ */
+export function updateOgImage(imageUrl: string): void {
+  // Update or create og:image meta tag
+  let ogImage = document.querySelector('meta[property="og:image"]');
+  if (!ogImage) {
+    ogImage = document.createElement('meta');
+    ogImage.setAttribute('property', 'og:image');
+    document.head.appendChild(ogImage);
+  }
+  ogImage.setAttribute('content', imageUrl);
+
+  // Update or create twitter:image meta tag
+  let twitterImage = document.querySelector('meta[name="twitter:image"]');
+  if (!twitterImage) {
+    twitterImage = document.createElement('meta');
+    twitterImage.setAttribute('name', 'twitter:image');
+    document.head.appendChild(twitterImage);
+  }
+  twitterImage.setAttribute('content', imageUrl);
 }
 
 /**

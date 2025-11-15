@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth } from "@/lib/basepaint";
-import { generateMiniappEmbed, injectEmbedMeta } from "@/lib/utils";
+import { generateMiniappEmbed, injectEmbedMeta, updateOgImage } from "@/lib/utils";
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
 import { FarcasterAuth } from "@/components/FarcasterAuth";
@@ -58,25 +58,6 @@ const Index = () => {
     return () => window.removeEventListener('farcaster:auth', handler as EventListener);
   }, []);
 
-  // Generate a referral link when the user connects their wallet
-  useEffect(() => {
-    if (isConnected && address) {
-      const link = `${window.location.origin}?referrer=${address}`;
-      setRefLink(link);
-      
-      // Inject embed metadata for rich sharing on Farcaster
-      const embedJson = generateMiniappEmbed(link, {
-        imageUrl: "https://basepaint-mint-hub.lovable.app/og-image.png",
-        buttonTitle: "🎨 Mint Canvas",
-        buttonUrl: link,
-        appName: "BasePaint Mint Hub"
-      });
-      injectEmbedMeta(embedJson);
-    } else {
-      setRefLink(null);
-    }
-  }, [isConnected, address]);
-
   const { data: canvasId, isLoading: isLoadingId, error: idError } = useQuery({
     queryKey: ['canvasId'],
     queryFn: getCurrentCanvasId,
@@ -87,6 +68,44 @@ const Index = () => {
     queryFn: () => getCanvasData(canvasId!),
     enabled: !!canvasId,
   });
+
+  // Update og-image and Farcaster embed meta tags when canvasId is available
+  useEffect(() => {
+    if (canvasId) {
+      const imageUrl = getArtworkUrl(canvasId);
+      updateOgImage(imageUrl);
+      
+      // Inject Farcaster embed metadata for the base page URL
+      const baseUrl = window.location.origin + window.location.pathname;
+      const embedJson = generateMiniappEmbed(baseUrl, {
+        imageUrl,
+        buttonTitle: "🎨 Mint Canvas",
+        buttonUrl: baseUrl,
+        appName: "BasePaint Mint Hub"
+      });
+      injectEmbedMeta(embedJson);
+    }
+  }, [canvasId]);
+
+  // Generate a referral link when the user connects their wallet
+  useEffect(() => {
+    if (isConnected && address) {
+      const link = `${window.location.origin}?referrer=${address}`;
+      setRefLink(link);
+      
+      // Inject embed metadata for rich sharing on Farcaster with referral link
+      const imageUrl = canvasId ? getArtworkUrl(canvasId) : "https://basepaint-mint-hub.lovable.app/og-image.png";
+      const embedJson = generateMiniappEmbed(link, {
+        imageUrl,
+        buttonTitle: "🎨 Mint Canvas",
+        buttonUrl: link,
+        appName: "BasePaint Mint Hub"
+      });
+      injectEmbedMeta(embedJson);
+    } else {
+      setRefLink(null);
+    }
+  }, [isConnected, address, canvasId]);
 
   const isLoading = isLoadingId || isLoadingData;
   const error = idError || dataError;
