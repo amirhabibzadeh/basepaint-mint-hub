@@ -39,6 +39,43 @@ npm i
 npm run dev
 ```
 
+## Testing API Routes Locally
+
+To test the Vercel serverless functions (API routes) locally, you have two options:
+
+### Option 1: Using Vercel CLI (Recommended)
+
+This runs both the Vite dev server and API routes together, exactly as they'll work in production:
+
+```bash
+# Install Vercel CLI globally (if not already installed)
+npm i -g vercel
+
+# Or use npx (no global install needed)
+npx vercel dev
+```
+
+This will:
+- Start Vite dev server on port 3000 (or next available)
+- Serve API routes from `/api` directory
+- Handle `/.well-known` routes via `vercel.json` rewrites
+- Provide the same environment as production
+
+**Test the endpoints:**
+- `http://localhost:3000/api/art/image?day=829` - Test image generation
+- `http://localhost:3000/api/farcaster.json?day=829` - Test Farcaster JSON
+- `http://localhost:3000/.well-known/farcaster.json?day=829` - Test well-known path
+
+### Option 2: Frontend Only (API routes won't work)
+
+If you just want to test the frontend without API routes:
+
+```bash
+npm run dev
+```
+
+This starts only the Vite dev server. The frontend will work, but API routes won't be available locally (they'll work in production on Vercel).
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
@@ -77,3 +114,30 @@ This project is built with:
    - **AWS Amplify**, **Cloudflare Pages**, or any static host
 
 3. Make sure `/.well-known/farcaster.json` is accessible on your domain
+
+## Dynamic Image Generation
+
+This project includes dynamic image generation for OG images and Farcaster embeds, similar to `basepaint.xyz/api/art/image?day=829`.
+
+### API Endpoints
+
+- `/api/art/image?day=XXX` - Generates dynamic artwork images for a specific canvas day
+- `/api/farcaster.json?day=XXX` - Returns dynamic Farcaster miniapp configuration
+- `/.well-known/farcaster.json?day=XXX` - Serves Farcaster JSON from the well-known path
+
+All endpoints automatically use the current canvas ID if no `day` parameter is provided.
+
+### API Routes (Vercel Serverless Functions)
+
+The API routes are implemented as Vercel serverless functions in the `/api` directory. When deployed via Lovable (which uses Vercel), these functions are automatically deployed and available at:
+
+- `https://your-domain.com/api/art/image?day=XXX`
+- `https://your-domain.com/api/farcaster.json?day=XXX`
+- `https://your-domain.com/.well-known/farcaster.json?day=XXX`
+
+**No additional configuration needed!** Lovable/Vercel automatically:
+- Detects and deploys functions in the `/api` directory
+- Handles routing for `/.well-known` paths (configured in `vercel.json`)
+- Provides environment variables like `VERCEL_URL` automatically
+
+The functions use Node.js runtime and can interact with blockchain via `viem` to fetch current canvas IDs.

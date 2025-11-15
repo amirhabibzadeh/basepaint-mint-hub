@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "vercel dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -67,7 +68,8 @@
     "vaul": "^0.9.9",
     "viem": "^2.39.0",
     "wagmi": "^2.19.4",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@vercel/node": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -86,6 +88,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "vercel": "^35.0.0"
   }
 }

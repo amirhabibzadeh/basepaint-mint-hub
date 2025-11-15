@@ -95,7 +95,9 @@ export async function getCanvasData(id: number): Promise<CanvasData> {
 }
 
 export function getArtworkUrl(id: number): string {
-  return `https://basepaint.xyz/api/art/image?day=${id}`;
+  // Use local API endpoint if available, otherwise fallback to basepaint.xyz
+  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+  return `${baseUrl}/api/art/image?day=${id}`;
 }
 
 export function formatEth(wei: string): string {

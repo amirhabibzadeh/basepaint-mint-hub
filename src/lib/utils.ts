@@ -28,7 +28,7 @@ export function generateMiniappEmbed(url: string, options: EmbedOptions): string
     buttonTitle = "🎨 Mint Canvas",
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
-    splashImageUrl = imageUrl || "https://basepaint-mint-hub.lovable.app/og-image.png",
+    splashImageUrl = imageUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/og-image.png`,
     splashBackgroundColor = "#000000"
   } = options;
 

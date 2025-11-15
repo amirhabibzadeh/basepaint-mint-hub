@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     allowedHosts: ["basepaint-mint-hub.loca.lt"],
+    // In development, Vite will serve API routes directly
+    // In production on Vercel, API routes are handled automatically
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

@@ -100,7 +100,7 @@ const Index = () => {
       
       // Overwrite meta tags with referral link and dynamic canvas artwork imageUrl
       // Always use dynamic imageUrl if canvasId is available, otherwise fallback
-      const imageUrl = canvasId ? getArtworkUrl(canvasId) : "https://basepaint-mint-hub.lovable.app/og-image.png";
+      const imageUrl = canvasId ? getArtworkUrl(canvasId) : `${window.location.origin}/og-image.png`;
       const embedJson = generateMiniappEmbed(link, {
         imageUrl, // Dynamic canvas artwork URL when available
         buttonTitle: "🎨 Mint Canvas",
