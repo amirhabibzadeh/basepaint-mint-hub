@@ -58,7 +58,7 @@ const Index = () => {
     return () => window.removeEventListener('farcaster:auth', handler as EventListener);
   }, []);
 
-  // Prompt user to add mini app after 30 seconds
+  // Prompt user to add mini app after 10 seconds
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
     let cancelled = false;
@@ -66,25 +66,19 @@ const Index = () => {
     const promptAddMiniApp = async () => {
       if (cancelled) return;
 
-      console.log('[farcaster] Attempting to prompt addMiniApp after 30 seconds...');
-
       try {
         // Initialize SDK first - this calls ready() which is required
-        const sdkInitialized = await initializeFarcasterSDK();
-        console.log('[farcaster] SDK initialized:', sdkInitialized);
+        await initializeFarcasterSDK();
 
         // Check if we're in a Farcaster context by trying to get context
         // If we can't get context, we're probably not in a Farcaster client
         let context = null;
         try {
           context = await getFarcasterContext();
-          console.log('[farcaster] Context available:', !!context);
           if (!context) {
-            console.log('[farcaster] No context available, not in Farcaster client - skipping addMiniApp');
             return;
           }
         } catch (e) {
-          console.log('[farcaster] Could not get context (not in Farcaster client?):', e);
           // If we can't get context, we're probably not in a Farcaster client
           // In this case, addMiniApp won't work anyway, so skip
           return;
@@ -92,50 +86,26 @@ const Index = () => {
 
         // Check if SDK actions are available
         if (!sdk?.actions?.addMiniApp) {
-          console.warn('[farcaster] addMiniApp action not available');
           return;
         }
 
         // Note: We don't check isInMiniApp() here because it may return true
         // when viewing in Warpcast even if the app isn't added yet.
         // The SDK will handle the case where the app is already added.
-
-        console.log('[farcaster] Calling sdk.actions.addMiniApp()...');
         
         // Prompt user to add the mini app
         // The SDK will handle errors if the app is already added or other issues
         await sdk.actions.addMiniApp();
-        console.log('[farcaster] addMiniApp prompt shown successfully');
       } catch (error) {
         if (cancelled) return;
 
-        // Handle specific error cases
-        if (error && typeof error === 'object' && 'name' in error) {
-          const errorName = (error as { name: string }).name;
-          
-          if (errorName === 'RejectedByUser') {
-            console.log('[farcaster] User rejected addMiniApp prompt');
-            // Don't show error toast for user rejection
-          } else if (errorName === 'InvalidDomainManifestJson') {
-            console.warn('[farcaster] Invalid domain or manifest - addMiniApp failed:', error);
-            console.warn('[farcaster] Make sure your domain matches the manifest and you are not using a tunnel domain');
-            // Only log, don't show toast as this might be expected in development
-          } else {
-            console.error('[farcaster] Error prompting addMiniApp:', error);
-            console.error('[farcaster] Error details:', {
-              name: errorName,
-              message: (error as Error)?.message,
-              error
-            });
-          }
-        } else {
-          console.error('[farcaster] Unknown error prompting addMiniApp:', error);
-        }
+        // Handle specific error cases silently
+        // RejectedByUser and InvalidDomainManifestJson are expected in some cases
+        // No need to log or show errors to the user
       }
     };
 
     // Set timer for 10 seconds (10000 milliseconds)
-    console.log('[farcaster] Setting 10 second timer for addMiniApp prompt');
     timeoutId = setTimeout(promptAddMiniApp, 10000);
 
     return () => {
