@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
-import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
+import { getFarcasterContext, initializeFarcasterSDK, isInMiniApp } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { sdk } from "@farcaster/miniapp-sdk";
@@ -56,6 +56,61 @@ const Index = () => {
     };
     window.addEventListener('farcaster:auth', handler as EventListener);
     return () => window.removeEventListener('farcaster:auth', handler as EventListener);
+  }, []);
+
+  // Prompt user to add mini app after 30 seconds
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    let cancelled = false;
+
+    const promptAddMiniApp = async () => {
+      if (cancelled) return;
+
+      try {
+        // Check if already in mini app (if so, don't prompt)
+        const inMiniApp = await isInMiniApp();
+        if (inMiniApp) {
+          console.debug('[farcaster] Already in mini app, skipping addMiniApp prompt');
+          return;
+        }
+
+        // Initialize SDK before calling addMiniApp
+        await initializeFarcasterSDK();
+
+        // Prompt user to add the mini app
+        await sdk.actions.addMiniApp();
+        console.debug('[farcaster] addMiniApp prompt shown');
+      } catch (error) {
+        if (cancelled) return;
+
+        // Handle specific error cases
+        if (error && typeof error === 'object' && 'name' in error) {
+          const errorName = (error as { name: string }).name;
+          
+          if (errorName === 'RejectedByUser') {
+            console.debug('[farcaster] User rejected addMiniApp prompt');
+            // Don't show error toast for user rejection
+          } else if (errorName === 'InvalidDomainManifestJson') {
+            console.warn('[farcaster] Invalid domain or manifest - addMiniApp failed:', error);
+            // Only log, don't show toast as this might be expected in development
+          } else {
+            console.error('[farcaster] Error prompting addMiniApp:', error);
+          }
+        } else {
+          console.error('[farcaster] Unknown error prompting addMiniApp:', error);
+        }
+      }
+    };
+
+    // Set timer for 30 seconds (30000 milliseconds)
+    timeoutId = setTimeout(promptAddMiniApp, 30000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   const { data: canvasId, isLoading: isLoadingId, error: idError } = useQuery({
