@@ -71,7 +71,31 @@ export default async function handler(
     const imageBuffer = await response.arrayBuffer();
     
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate');
+    
+    // Use ETag with dayNum to invalidate cache when day changes
+    const etag = `"day-${dayNum}"`;
+    res.setHeader('ETag', etag);
+    
+    // Check if client has cached version
+    if (req.headers['if-none-match'] === etag) {
+      res.status(304).end(); // Not Modified
+      return;
+    }
+    
+    // Calculate seconds until next midnight UTC (BasePaint likely uses UTC)
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setUTCHours(23, 59, 59, 999); // Today's midnight UTC
+    // If we've already passed midnight today, add 24 hours for tomorrow
+    if (midnight.getTime() <= now.getTime()) {
+      midnight.setTime(midnight.getTime() + 24 * 60 * 60 * 1000);
+    }
+    const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
+    
+    // Cache until midnight, with a minimum of 60 seconds
+    const cacheMaxAge = Math.max(60, secondsUntilMidnight);
+    
+    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, must-revalidate`);
     res.send(Buffer.from(imageBuffer));
   } catch (error) {
     console.error('Error generating image:', error);
