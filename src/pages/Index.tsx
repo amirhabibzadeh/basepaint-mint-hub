@@ -5,14 +5,15 @@ import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
 import { WalletConnect } from "@/components/WalletConnect";
 import Countdown from "@/components/Countdown";
-import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock, Info } from "lucide-react";
+import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
-import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
+import { getFarcasterContext, initializeFarcasterSDK, isInMiniApp } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { sdk } from "@farcaster/miniapp-sdk";
@@ -20,6 +21,7 @@ import { sdk } from "@farcaster/miniapp-sdk";
 const Index = () => {
   const [referralId, setReferralId] = useState<string | null>(null);
   const [refLink, setRefLink] = useState<string | null>(null);
+  const [inMiniApp, setInMiniApp] = useState(false);
   const { address, isConnected } = useAccount();
   const farcasterUser = useFarcasterUser();
 
@@ -29,6 +31,15 @@ const Index = () => {
     if (ref) {
       setReferralId(ref);
     }
+  }, []);
+
+  // Check if we're in a mini app
+  useEffect(() => {
+    const checkMiniApp = async () => {
+      const inApp = await isInMiniApp();
+      setInMiniApp(inApp);
+    };
+    checkMiniApp();
   }, []);
 
   // Use farcasterUser from hook to get wallet address if available
@@ -300,6 +311,20 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Show Farcaster user info in mini app after loading */}
+            {inMiniApp && !isLoading && farcasterUser && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 bg-background/60 backdrop-blur-sm">
+                <Avatar className="w-6 h-6 ring-1 ring-primary/20">
+                  <AvatarImage src={farcasterUser.pfpUrl} alt={farcasterUser.username} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="w-3 h-3" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                  {farcasterUser.displayName || farcasterUser.username || 'Farcaster User'}
+                </span>
+              </div>
+            )}
             {/* Show wallet connect - Farcaster connection is available in the dropdown */}
             <div className="max-w-[200px]">
               <WalletConnect addressOverride={farcasterUser?.walletAddress} />
