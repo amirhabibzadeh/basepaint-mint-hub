@@ -330,6 +330,7 @@ const Index = () => {
               <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border/50">
                 <span className="text-sm font-bold text-foreground">
                   Canvas #{canvasData.id}
+                  {canvasData.name && ` • ${canvasData.name}`}
                 </span>
               </div>
               {epochDuration && startedAt && (

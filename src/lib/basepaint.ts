@@ -46,6 +46,7 @@ export interface Contribution {
 
 export interface CanvasData {
   id: number;
+  name?: string;
   totalMints: number;
   totalEarned: string;
   pixelsCount: number;
@@ -89,6 +90,7 @@ export async function getCanvasData(id: number): Promise<CanvasData> {
     query GetCanvasData($id: Int!) {
       canvas(id: $id) {
         id
+        name
         totalMints
         totalEarned
         pixelsCount
