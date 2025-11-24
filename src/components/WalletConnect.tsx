@@ -2,14 +2,24 @@ import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } fro
 import type { Connector } from 'wagmi';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wallet, LogOut, AlertCircle } from "lucide-react";
+import { Wallet, LogOut, AlertCircle, User } from "lucide-react";
 import { formatAddress } from "@/lib/basepaint";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { base } from "wagmi/chains";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import type { FarcasterUser } from "@/lib/farcaster";
 
-export function WalletConnect({ addressOverride }: { addressOverride?: string } = {}) {
+export function WalletConnect({ 
+  addressOverride,
+  farcasterUser,
+  inMiniApp = false
+}: { 
+  addressOverride?: string;
+  farcasterUser?: FarcasterUser | null;
+  inMiniApp?: boolean;
+} = {}) {
   const { address: wagmiAddress, isConnected } = useAccount();
   const address = addressOverride || wagmiAddress;
   const { connect, connectors, isPending } = useConnect();
@@ -85,13 +95,37 @@ export function WalletConnect({ addressOverride }: { addressOverride?: string } 
           )}
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-muted-foreground mb-0.5">Connected Wallet</div>
-              <div className="font-mono text-xs font-bold text-foreground truncate">
-                {formatAddress(address)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {chainId === base.id ? "Base Network" : "Wrong Network"}
-              </div>
+              {inMiniApp && farcasterUser ? (
+                <div className="flex items-center gap-2">
+                  <Avatar className="w-6 h-6 ring-1 ring-primary/20">
+                    <AvatarImage src={farcasterUser.pfpUrl} alt={farcasterUser.username} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      <User className="w-3 h-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-foreground truncate">
+                      {farcasterUser.displayName || farcasterUser.username || 'Farcaster User'}
+                    </div>
+                    <div className="font-mono text-xs text-muted-foreground truncate">
+                      {formatAddress(address)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {chainId === base.id ? "Base Network" : "Wrong Network"}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-xs text-muted-foreground mb-0.5">Connected Wallet</div>
+                  <div className="font-mono text-xs font-bold text-foreground truncate">
+                    {formatAddress(address)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {chainId === base.id ? "Base Network" : "Wrong Network"}
+                  </div>
+                </>
+              )}
             </div>
             <Button
               onClick={handleDisconnect}
