@@ -3,13 +3,13 @@ import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth, getEpochDu
 import { generateMiniappEmbed, injectEmbedMeta, updateOgImage } from "@/lib/utils";
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
-import { FarcasterAuth } from "@/components/FarcasterAuth";
 import { WalletConnect } from "@/components/WalletConnect";
 import Countdown from "@/components/Countdown";
-import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock } from "lucide-react";
+import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
 import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
@@ -31,9 +31,7 @@ const Index = () => {
     }
   }, []);
 
-  // Use farcasterUser from hook instead of duplicate context check
-  // The FarcasterProvider handles SDK initialization
-  const isFarcasterConnected = !!farcasterUser;
+  // Use farcasterUser from hook to get wallet address if available
 
 
 
@@ -262,39 +260,50 @@ const Index = () => {
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Basepaint
             </h1>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 md:h-9 md:w-9 text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                >
+                  <Info className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="sr-only">About BasePaint</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-primary" />
+                    About BasePaint Mint Hub
+                  </DialogTitle>
+                  <DialogDescription className="text-left space-y-3 pt-2">
+                    <div>
+                      <p className="font-medium text-foreground mb-1">What is BasePaint?</p>
+                      <p className="text-sm text-muted-foreground">
+                        BasePaint is a daily collaborative art canvas on Farcaster where creators paint together. 
+                        Each day's final artwork becomes a mintable piece.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground mb-1">About This Mint</p>
+                      <p className="text-sm text-muted-foreground">
+                        This mint hub provides an easy way to mint the daily collaborative artwork from BasePaint.xyz. 
+                        Each canvas represents a day of collective creativity from the Farcaster community, 
+                        transformed into a unique NFT on the Base network.
+                      </p>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Show wallet if connected. If not, show Farcaster + connect button(s). If Farcaster is connected and user has wallet, show both. */}
-            {isConnected ? (
-              <div className="max-w-[200px]">
-                <WalletConnect />
-              </div>
-            ) : isFarcasterConnected ? (
-              farcasterUser?.walletAddress ? (
-                <div className="flex items-center gap-2">
-                  <div className="max-w-[160px]">
-                    <FarcasterAuth compact />
-                  </div>
-                  <div className="max-w-[160px]">
-                    <WalletConnect addressOverride={farcasterUser.walletAddress} />
-                  </div>
-                </div>
-              ) : (
-                <div className="max-w-[200px]">
-                  <FarcasterAuth compact />
-                </div>
-              )
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="max-w-[140px]">
-                  <FarcasterAuth compact />
-                </div>
-                <div className="max-w-[140px]">
-                  <WalletConnect />
-                </div>
-              </div>
-            )}
+            {/* Show wallet connect - Farcaster connection is available in the dropdown */}
+            <div className="max-w-[200px]">
+              <WalletConnect addressOverride={farcasterUser?.walletAddress} />
+            </div>
           </div>
         </div>
 
