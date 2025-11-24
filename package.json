@@ -6,12 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vercel": "vercel dev",
     "dev:full": "vercel dev",
     "dev:api": "vercel dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "dev:local": "concurrently \"vite\" \"tsx local-server.ts\"",
+    "start:api": "tsx local-server.ts",
     "lt": "lt --port 8080 --subdomain basepaint-mint-hub"
   },
   "dependencies": {
@@ -85,6 +88,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -92,8 +96,10 @@
     "lovable-tagger": "^1.1.11",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
+    "vercel": "^48.10.11",
     "vite": "^5.4.19"
   }
 }

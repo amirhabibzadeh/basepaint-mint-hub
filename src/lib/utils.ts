@@ -34,44 +34,49 @@ function ensureAbsoluteHttpsUrl(url: string, fallbackOrigin?: string): string {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
-      
-      // Reject localhost and IP addresses
-      if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-        throw new Error(`Invalid URL: ${url} - Cannot use localhost or IP addresses`);
+
+      // Allow localhost/IP for development
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+
+      if (isLocalhost) {
+        return url;
       }
-      
+
       return url;
     } catch (e) {
       throw new Error(`Invalid URL: ${url} - ${e instanceof Error ? e.message : 'Invalid URL format'}`);
     }
   }
-  
+
   // If relative URL, convert to absolute using fallback origin
   const origin = fallbackOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
   if (!origin) {
     throw new Error(`Cannot convert relative URL ${url} to absolute - no origin available`);
   }
-  
-  // Ensure origin is HTTPS
-  if (!origin.startsWith('https://')) {
+
+  // Ensure origin is HTTPS (unless localhost)
+  const isLocalOrigin = origin.includes('localhost') || origin.includes('127.0.0.1');
+  if (!origin.startsWith('https://') && !isLocalOrigin) {
     throw new Error(`Origin must be HTTPS: ${origin}`);
   }
-  
+
   // Convert relative to absolute
-  const absoluteUrl = url.startsWith('/') 
-    ? `${origin}${url}` 
+  const absoluteUrl = url.startsWith('/')
+    ? `${origin}${url}`
     : `${origin}/${url}`;
-  
+
   // Validate the resulting URL
   try {
     const urlObj = new URL(absoluteUrl);
     const hostname = urlObj.hostname;
-    
-    // Reject localhost and IP addresses
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-      throw new Error(`Invalid URL: ${absoluteUrl} - Cannot use localhost or IP addresses`);
+
+    // Allow localhost/IP for development
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+
+    if (isLocalhost) {
+      return absoluteUrl;
     }
-    
+
     return absoluteUrl;
   } catch (e) {
     throw new Error(`Invalid URL: ${absoluteUrl} - ${e instanceof Error ? e.message : 'Invalid URL format'}`);
@@ -85,16 +90,16 @@ export function generateMiniappEmbed(url: string, options: EmbedOptions): string
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
     splashImageUrl = imageUrl,
-    splashBackgroundColor = "#000000"
+    splashBackgroundColor = "#0A2345"
   } = options;
 
   // Get fallback origin for relative URLs
   const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
-  
+
   // Ensure all URLs are absolute HTTPS URLs
   const absoluteImageUrl = ensureAbsoluteHttpsUrl(imageUrl, fallbackOrigin);
   const absoluteButtonUrl = ensureAbsoluteHttpsUrl(buttonUrl, fallbackOrigin);
-  const absoluteSplashImageUrl = splashImageUrl 
+  const absoluteSplashImageUrl = splashImageUrl
     ? ensureAbsoluteHttpsUrl(splashImageUrl, fallbackOrigin)
     : absoluteImageUrl;
 

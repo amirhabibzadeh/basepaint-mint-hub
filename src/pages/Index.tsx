@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth } from "@/lib/basepaint";
+import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth, getEpochDuration, getStartedAt } from "@/lib/basepaint";
 import { generateMiniappEmbed, injectEmbedMeta, updateOgImage } from "@/lib/utils";
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
 import { FarcasterAuth } from "@/components/FarcasterAuth";
 import { WalletConnect } from "@/components/WalletConnect";
-import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink } from "lucide-react";
+import Countdown from "@/components/Countdown";
+import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,7 +21,6 @@ const Index = () => {
   const [referralId, setReferralId] = useState<string | null>(null);
   const [refLink, setRefLink] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
-  const [isFarcasterConnected, setIsFarcasterConnected] = useState(false);
   const farcasterUser = useFarcasterUser();
 
   useEffect(() => {
@@ -28,35 +28,15 @@ const Index = () => {
     const ref = params.get('ref') || params.get('referrer');
     if (ref) {
       setReferralId(ref);
-      console.log('Referral ID detected from URL:', ref);
     }
   }, []);
 
-  // Initial Farcaster context check (so Index knows whether Farcaster is connected)
-  useEffect(() => {
-    let cancelled = false;
-    const check = async () => {
-      try {
-        const context = await getFarcasterContext();
-        if (!cancelled && context?.user) setIsFarcasterConnected(true);
-      } catch (e) {
-        // ignore
-      }
-    };
-    check();
-    return () => { cancelled = true; };
-  }, []);
+  // Use farcasterUser from hook instead of duplicate context check
+  // The FarcasterProvider handles SDK initialization
+  const isFarcasterConnected = !!farcasterUser;
 
-  // Listen for Farcaster auth events emitted by the FarcasterAuth component
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const ce = e as CustomEvent;
-      const user = ce?.detail || null;
-      setIsFarcasterConnected(!!user);
-    };
-    window.addEventListener('farcaster:auth', handler as EventListener);
-    return () => window.removeEventListener('farcaster:auth', handler as EventListener);
-  }, []);
+
+
 
   // Prompt user to add mini app after 10 seconds
   useEffect(() => {
@@ -92,7 +72,7 @@ const Index = () => {
         // Note: We don't check isInMiniApp() here because it may return true
         // when viewing in Warpcast even if the app isn't added yet.
         // The SDK will handle the case where the app is already added.
-        
+
         // Prompt user to add the mini app
         // The SDK will handle errors if the app is already added or other issues
         await sdk.actions.addMiniApp();
@@ -121,11 +101,29 @@ const Index = () => {
     queryFn: getCurrentCanvasId,
   });
 
+
+
   const { data: canvasData, isLoading: isLoadingData, error: dataError } = useQuery({
     queryKey: ['canvasData', canvasId],
     queryFn: () => getCanvasData(canvasId!),
     enabled: !!canvasId,
   });
+
+
+
+  const { data: epochDuration } = useQuery({
+    queryKey: ['epochDuration'],
+    queryFn: getEpochDuration,
+  });
+
+  const { data: startedAt } = useQuery({
+    queryKey: ['startedAt'],
+    queryFn: getStartedAt,
+  });
+
+  const isLoading = isLoadingId || isLoadingData;
+  const error = idError || dataError;
+
 
   // Update og-image and Farcaster embed meta tags when canvasId is available
   // This overwrites the static fallback meta tags from index.html with dynamic canvas artwork
@@ -133,10 +131,10 @@ const Index = () => {
     if (canvasId) {
       // Get dynamic canvas artwork URL
       const imageUrl = getArtworkUrl(canvasId);
-      
+
       // Update Open Graph and Twitter meta tags with dynamic image and canvas info
       updateOgImage(imageUrl, canvasId);
-      
+
       // Overwrite/update Farcaster embed meta tags (fc:miniapp and fc:frame) with dynamic imageUrl
       const baseUrl = window.location.origin + window.location.pathname;
       const embedJson = generateMiniappEmbed(baseUrl, {
@@ -155,7 +153,7 @@ const Index = () => {
     if (isConnected && address) {
       const link = `${window.location.origin}?referrer=${address}`;
       setRefLink(link);
-      
+
       // Overwrite meta tags with referral link and dynamic canvas artwork imageUrl
       // Always use dynamic imageUrl if canvasId is available, otherwise fallback
       const imageUrl = canvasId ? getArtworkUrl(canvasId) : `${window.location.origin}/og-image.png`;
@@ -184,8 +182,7 @@ const Index = () => {
     }
   }, [isConnected, address, canvasId]);
 
-  const isLoading = isLoadingId || isLoadingData;
-  const error = idError || dataError;
+
 
   const copyRef = async () => {
     if (!refLink) return;
@@ -215,19 +212,19 @@ const Index = () => {
 
   const shareToFarcaster = async () => {
     if (!refLink) return;
-    
+
     try {
       // Initialize SDK if not already initialized
       await initializeFarcasterSDK();
-      
+
       const text = `Mint this collaborative artwork on BasePaint or share it with friends to earn 10 percent of the rewards. ${refLink}\n\n`;
-      
+
       // Use the Farcaster Mini App SDK to compose a cast
       const result = await sdk.actions.composeCast({
         text,
         embeds: [refLink], // Include the referral link as an embed
       }) as { cast: { hash: string; channelKey?: string } | null } | undefined;
-      
+
       // result can be undefined if close is set to true, or cast can be null if user cancels
       if (result?.cast) {
         toast.success('Cast posted successfully!');
@@ -312,7 +309,7 @@ const Index = () => {
           </div>
         ) : canvasData && canvasId ? (
           <div className="space-y-6 animate-fade-in">
-            
+
             {/* Artwork Display */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-primary opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-300 rounded-2xl" />
@@ -326,6 +323,14 @@ const Index = () => {
                   Canvas #{canvasData.id}
                 </span>
               </div>
+              {epochDuration && startedAt && (
+                <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border/50 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-mono font-bold text-foreground">
+                    <Countdown startedAt={startedAt} epochDuration={epochDuration} />
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Stats Grid */}
@@ -373,7 +378,7 @@ const Index = () => {
                     />
                   </div>
                   <div className="text-xs text-muted-foreground mt-1.5">
-                    Share this link — you earn 10% of protocol fees for mints that use it. 
+                    Share this link — you earn 10% of protocol fees for mints that use it.
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 md:gap-2">

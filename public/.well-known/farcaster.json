@@ -7,10 +7,10 @@
   "miniapp": {
     "version": "1",
     "name": "BasePaint Mint Hub",
-    "iconUrl": "https://basepaint.xyz/logo.png",
+    "iconUrl": "https://basepaint-mint-hub.vercel.app/icon.png",
     "homeUrl": "https://basepaint-mint-hub.vercel.app",
-    "splashImageUrl": "https://basepaint-mint-hub.vercel.app/api/art/image",
-    "splashBackgroundColor": "#000000",
+    "splashImageUrl": "https://basepaint-mint-hub.vercel.app/icon-32x32.png",
+    "splashBackgroundColor": "#0A2345",
     "subtitle": "Collaborative on-chain art",
     "description": "Mint and contribute pixels to collaborative on-chain art canvases on Base Network. Earn protocol fees from referrals.",
     "primaryCategory": "art-creativity",

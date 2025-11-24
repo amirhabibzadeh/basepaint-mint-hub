@@ -1,12 +1,42 @@
-import { createPublicClient, http } from 'viem';
+
 import { base } from 'viem/chains';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const BASEPAINT_CONTRACT = '0xba5e05cb26b78eda3a2f8e3b3814726305dcac83';
 
+import { createPublicClient, http, fallback } from 'viem';
+
+// Base RPC configuration with fallbacks
+// Prioritize alternative RPCs over mainnet.base.org (which is rate-limited)
+const BASE_RPC_URLS = [
+  'https://base.llamarpc.com',
+  'https://base-rpc.publicnode.com',
+  'https://1rpc.io/base',
+  'https://base.meowrpc.com',
+  'https://base.gateway.tenderly.co',
+  'https://base.blockpi.network/v1/rpc/public',
+  'https://mainnet.base.org', // Last due to rate limiting
+];
+
+// Shuffle array using Fisher-Yates algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 const publicClient = createPublicClient({
   chain: base,
-  transport: http(),
+  transport: fallback(
+    shuffleArray(BASE_RPC_URLS).map(url => http(url, {
+      timeout: 10_000, // 10 second timeout
+      retryCount: 3,
+      retryDelay: 1000, // 1 second between retries
+    }))
+  ),
 });
 
 async function getCurrentCanvasId(): Promise<number> {
@@ -24,11 +54,12 @@ async function getCurrentCanvasId(): Promise<number> {
       ] as const,
       functionName: 'today',
     } as any);
-    
+
     // Return yesterday's canvas (today - 1)
-    return Number(data) - 1;
+    const canvasId = Number(data) - 1;
+    return canvasId;
   } catch (error) {
-    console.error('Error fetching canvas ID:', error);
+    console.error('[API] Error fetching canvas ID:', error);
     throw error;
   }
 }
@@ -39,15 +70,15 @@ export default async function handler(
 ) {
   try {
     const day = req.query.day as string | undefined;
-    
+
     let dayNum: number;
-    
+
     if (!day) {
       // If no day specified, use current canvas
       try {
         dayNum = await getCurrentCanvasId();
       } catch (error) {
-        console.error('Error fetching current canvas:', error);
+        console.error('[API] Error fetching current canvas:', error);
         res.status(500).send('Failed to fetch current canvas');
         return;
       }
@@ -61,27 +92,29 @@ export default async function handler(
 
     // Fetch the actual artwork from basepaint.xyz
     const artworkUrl = `https://basepaint.xyz/api/art/image?day=${dayNum}`;
+
     const response = await fetch(artworkUrl);
-    
+
     if (!response.ok) {
+      console.error('[API] Failed to fetch artwork, status:', response.status);
       res.status(500).send('Failed to fetch artwork');
       return;
     }
 
     const imageBuffer = await response.arrayBuffer();
-    
+
     res.setHeader('Content-Type', 'image/png');
-    
+
     // Use ETag with dayNum to invalidate cache when day changes
     const etag = `"day-${dayNum}"`;
     res.setHeader('ETag', etag);
-    
+
     // Check if client has cached version
     if (req.headers['if-none-match'] === etag) {
       res.status(304).end(); // Not Modified
       return;
     }
-    
+
     // Calculate seconds until next midnight UTC (BasePaint likely uses UTC)
     const now = new Date();
     const midnight = new Date(now);
@@ -91,15 +124,18 @@ export default async function handler(
       midnight.setTime(midnight.getTime() + 24 * 60 * 60 * 1000);
     }
     const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
-    
+
     // Cache until midnight, with a minimum of 60 seconds
     const cacheMaxAge = Math.max(60, secondsUntilMidnight);
-    
+
     res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, must-revalidate`);
     res.send(Buffer.from(imageBuffer));
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('[API] Error generating image:', error);
+    console.error('[API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+    });
     res.status(500).send('Internal server error');
   }
 }
-

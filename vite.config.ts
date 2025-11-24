@@ -6,16 +6,14 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
-    allowedHosts: ["basepaint-mint-hub.loca.lt"],
+    host: '127.0.0.1',
+    port: 5173,
+    // Proxy /api requests to local Express server (running on port 3001)
     proxy: {
-      // Proxy API image route directly to basepaint.xyz for local development
-      // This allows testing without vercel dev
-      '/api/art/image': {
-        target: 'https://basepaint.xyz',
+      '/api': {
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },
