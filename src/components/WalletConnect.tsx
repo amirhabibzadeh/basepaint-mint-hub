@@ -84,44 +84,46 @@ export function WalletConnect({
   if ((isConnected && address) || addressOverride) {
     return (
       <Card className="border-border/50 bg-gradient-card backdrop-blur-xl">
-        <div className="p-3">
+        <div className="p-1.5">
           {chainId !== base.id && (
-            <Alert variant="destructive" className="mb-3 py-2">
-              <AlertCircle className="h-3 w-3" />
-              <AlertDescription className="text-xs">
+            <Alert variant="destructive" className="mb-1.5 py-1">
+              <AlertCircle className="h-2.5 w-2.5" />
+              <AlertDescription className="text-[10px]">
                 Please switch to Base network
               </AlertDescription>
             </Alert>
           )}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
               {inMiniApp && farcasterUser ? (
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6 ring-1 ring-primary/20">
+                <div className="flex items-center gap-1.5">
+                  <Avatar className="w-5 h-5 ring-1 ring-primary/20 flex-shrink-0">
                     <AvatarImage src={farcasterUser.pfpUrl} alt={farcasterUser.username} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      <User className="w-3 h-3" />
+                      <User className="w-2.5 h-2.5" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground truncate">
+                    <div className="text-xs font-medium text-foreground truncate leading-tight">
                       {farcasterUser.displayName || farcasterUser.username || 'Farcaster User'}
                     </div>
-                    <div className="font-mono text-xs text-muted-foreground truncate">
+                    <div className="font-mono text-[10px] text-muted-foreground truncate leading-tight">
                       {formatAddress(address)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {chainId === base.id ? "Base Network" : "Wrong Network"}
-                    </div>
+                    {chainId !== base.id && (
+                      <div className="text-[10px] text-muted-foreground leading-tight">
+                        Wrong Network
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="text-xs text-muted-foreground mb-0.5">Connected Wallet</div>
-                  <div className="font-mono text-xs font-bold text-foreground truncate">
+                  <div className="text-[10px] text-muted-foreground mb-0.5 leading-tight">Connected Wallet</div>
+                  <div className="font-mono text-xs font-bold text-foreground truncate leading-tight">
                     {formatAddress(address)}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
+                  <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
                     {chainId === base.id ? "Base Network" : "Wrong Network"}
                   </div>
                 </>
@@ -131,7 +133,7 @@ export function WalletConnect({
               onClick={handleDisconnect}
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 hover:bg-destructive/10"
+              className="h-6 w-6 p-0 hover:bg-destructive/10 flex-shrink-0"
             >
               <LogOut className="w-3 h-3" />
             </Button>
@@ -145,9 +147,10 @@ export function WalletConnect({
       <Button
         onClick={() => setOpen((s) => !s)}
         variant="outline"
-        className="flex items-center gap-2"
+        size="sm"
+        className="flex items-center gap-1.5 h-8 text-xs"
       >
-        <Wallet className="w-4 h-4" />
+        <Wallet className="w-3.5 h-3.5" />
         Connect Wallet
       </Button>
 

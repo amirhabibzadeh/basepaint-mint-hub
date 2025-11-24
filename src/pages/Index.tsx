@@ -262,12 +262,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-4 max-w-6xl">
         {/* Header: logo left, connections right (compact, single row) */}
-        <div className="flex items-center justify-between mb-6 animate-fade-in">
-          <div className="flex items-center gap-3">
-            <Palette className="w-10 h-10 text-primary" />
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="flex items-center justify-between mb-4 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Palette className="w-8 h-8 text-primary" />
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Basepaint
             </h1>
             <Dialog>
@@ -311,7 +311,7 @@ const Index = () => {
 
           <div className="flex items-center gap-2">
             {/* Show wallet connect - Farcaster profile integrated when in mini app */}
-            <div className="max-w-[200px]">
+            <div className="max-w-[180px]">
               <WalletConnect 
                 addressOverride={farcasterUser?.walletAddress} 
                 farcasterUser={inMiniApp && !isLoading ? farcasterUser : null}
@@ -341,16 +341,16 @@ const Index = () => {
                 alt={`Canvas #${canvasId}`}
                 className="relative w-full aspect-square rounded-2xl border-2 border-border/50 shadow-2xl object-cover"
               />
-              <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border/50">
-                <span className="text-sm font-bold text-foreground">
+              <div className="absolute top-3 left-3 bg-background/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border/50">
+                <span className="text-xs font-bold text-foreground">
                   Canvas #{canvasData.id}
                   {canvasData.name && ` • ${canvasData.name}`}
                 </span>
               </div>
               {epochDuration && startedAt && (
-                <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border/50 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-mono font-bold text-foreground">
+                <div className="absolute bottom-3 left-3 bg-background/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border/50 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-mono font-bold text-foreground">
                     <Countdown startedAt={startedAt} epochDuration={epochDuration} />
                   </span>
                 </div>
