@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
-import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
+import { initializeFarcasterSDK } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { sdk } from "@farcaster/miniapp-sdk";
@@ -37,67 +37,6 @@ const Index = () => {
   }, []);
 
   // Use farcasterUser from hook to get wallet address if available
-
-
-
-
-  // Prompt user to add mini app after 10 seconds
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    let cancelled = false;
-
-    const promptAddMiniApp = async () => {
-      if (cancelled) return;
-
-      try {
-        // Initialize SDK first - this calls ready() which is required
-        await initializeFarcasterSDK();
-
-        // Check if we're in a Farcaster context by trying to get context
-        // If we can't get context, we're probably not in a Farcaster client
-        let context = null;
-        try {
-          context = await getFarcasterContext();
-          if (!context) {
-            return;
-          }
-        } catch (e) {
-          // If we can't get context, we're probably not in a Farcaster client
-          // In this case, addMiniApp won't work anyway, so skip
-          return;
-        }
-
-        // Check if SDK actions are available
-        if (!sdk?.actions?.addMiniApp) {
-          return;
-        }
-
-        // Note: We don't check isInMiniApp() here because it may return true
-        // when viewing in Warpcast even if the app isn't added yet.
-        // The SDK will handle the case where the app is already added.
-
-        // Prompt user to add the mini app
-        // The SDK will handle errors if the app is already added or other issues
-        await sdk.actions.addMiniApp();
-      } catch (error) {
-        if (cancelled) return;
-
-        // Handle specific error cases silently
-        // RejectedByUser and InvalidDomainManifestJson are expected in some cases
-        // No need to log or show errors to the user
-      }
-    };
-
-    // Set timer for 10 seconds (10000 milliseconds)
-    timeoutId = setTimeout(promptAddMiniApp, 10000);
-
-    return () => {
-      cancelled = true;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, []);
 
   const { data: canvasId, isLoading: isLoadingId, error: idError } = useQuery({
     queryKey: ['canvasId', dayParam],
