@@ -8,8 +8,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { SubHeader } from "@/components/SubHeader";
 import { Header } from "@/components/Header";
 import { CanvasCard } from "@/components/CanvasCard";
+import { ShareGallery } from "@/components/ShareGallery";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import {
     Select,
@@ -26,6 +27,7 @@ const Gallery = () => {
     const { wallet } = useParams<{ wallet: string }>();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterOption, setFilterOption] = useState<FilterOption>("LATEST");
+    const hasSetDefaultFilter = useRef(false);
 
     // Validate wallet parameter exists
     useEffect(() => {
@@ -133,6 +135,19 @@ const Gallery = () => {
         return map;
     }, [balances, isLoadingBalances, balancesError]);
 
+    // Calculate total owned count
+    const totalOwnedCount = useMemo(() => {
+        return Array.from(ownedCanvasMap.values()).reduce((sum, count) => sum + count, 0);
+    }, [ownedCanvasMap]);
+
+    // Set default filter to OWNED when wallet has balance (only once on initial load)
+    useEffect(() => {
+        if (!hasSetDefaultFilter.current && !isLoadingBalances && balances && totalOwnedCount > 0 && filterOption === "LATEST") {
+            setFilterOption("OWNED");
+            hasSetDefaultFilter.current = true;
+        }
+    }, [balances, isLoadingBalances, totalOwnedCount, filterOption]);
+
     // Filter canvases (sorting is now done server-side for POPULAR and RARE)
     const filteredCanvases = useMemo(() => {
         if (!canvases) return [];
@@ -187,17 +202,7 @@ const Gallery = () => {
                 {/* Sub Header Navigation */}
                 <SubHeader />
 
-                {/* Wallet Address Display */}
-                {wallet && (
-                    <div className="mb-6 p-4 bg-card/40 backdrop-blur-xl border border-border/50 rounded-xl">
-                        <div className="text-sm text-muted-foreground mb-1">Gallery for wallet:</div>
-                        <div className="font-mono text-sm md:text-base font-medium break-all">
-                            {wallet}
-                        </div>
-                    </div>
-                )}
-
-                {/* Search and Filter */}
+                {/* Search and Filter - First Place */}
                 <div className="mb-6 flex flex-col sm:flex-row gap-3">
                     {/* Search Input */}
                     <div className="relative flex-1">
@@ -231,6 +236,21 @@ const Gallery = () => {
                         Search
                     </Button>
                 </div>
+
+                {/* Share Gallery Component */}
+                {wallet && (
+                    <ShareGallery wallet={wallet} ownedCount={totalOwnedCount} />
+                )}
+
+                {/* Wallet Address Display */}
+                {wallet && (
+                    <div className="mb-6 p-4 bg-card/40 backdrop-blur-xl border border-border/50 rounded-xl">
+                        <div className="text-sm text-muted-foreground mb-1">Gallery for wallet:</div>
+                        <div className="font-mono text-sm md:text-base font-medium break-all">
+                            {wallet}
+                        </div>
+                    </div>
+                )}
 
                 {/* Gallery Grid */}
                 {isLoading ? (
