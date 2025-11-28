@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { sdk } from '@farcaster/miniapp-sdk';
-import { initializeFarcasterSDK, quickAuthUser, signInWithFarcaster, getFarcasterContext, FarcasterUser } from '@/lib/farcaster';
+import { initializeFarcasterSDK, quickAuthUser, signInWithFarcaster, getFarcasterContext, FarcasterUser, isInMiniApp } from '@/lib/farcaster';
 
 type FarcasterState = {
   initialized: boolean;
   user: FarcasterUser | null;
   client?: Record<string, unknown>;
+  inMiniApp: boolean;
   quickAuthAvailable?: boolean;
   signIn: () => Promise<FarcasterUser | null>;
   quickAuth: () => Promise<FarcasterUser | null>;
@@ -24,6 +25,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [client, setClient] = useState<Record<string, unknown> | undefined>(undefined);
+  const [inMiniApp, setInMiniApp] = useState(false);
 
   // Initialize SDK on mount (idempotent)
   useEffect(() => {
@@ -33,6 +35,12 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         await initializeFarcasterSDK();
         if (!mounted) return;
         setInitialized(true);
+
+        // Check if we're in a mini app
+        const inApp = await isInMiniApp();
+        if (mounted) {
+          setInMiniApp(inApp);
+        }
 
         // Get context and set user state - this is the primary source of truth
         const ctx = await getFarcasterContext();
@@ -130,7 +138,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ initialized, user, client, signIn, quickAuth }), [initialized, user, client]);
+  const value = useMemo(() => ({ initialized, user, client, inMiniApp, signIn, quickAuth }), [initialized, user, client, inMiniApp]);
 
   return <FarcasterContext.Provider value={value}>{children}</FarcasterContext.Provider>;
 }

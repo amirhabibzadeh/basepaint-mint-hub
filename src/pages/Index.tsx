@@ -3,24 +3,28 @@ import { getCurrentCanvasId, getCanvasData, getArtworkUrl, formatEth, getEpochDu
 import { generateMiniappEmbed, injectEmbedMeta, updateOgImage } from "@/lib/utils";
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
-import { WalletConnect } from "@/components/WalletConnect";
+import { Header } from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
+import { SubHeader } from "@/components/SubHeader";
 import Countdown, { getSecondsLeft } from "@/components/Countdown";
-import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock, Info } from "lucide-react";
+import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useFarcasterUser } from "@/hooks/useFarcasterUser";
-import { getFarcasterContext, initializeFarcasterSDK, isInMiniApp } from "@/lib/farcaster";
+import { getFarcasterContext, initializeFarcasterSDK } from "@/lib/farcaster";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { sdk } from "@farcaster/miniapp-sdk";
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
+  const dayParam = searchParams.get('day');
   const [referralId, setReferralId] = useState<string | null>(null);
   const [refLink, setRefLink] = useState<string | null>(null);
-  const [inMiniApp, setInMiniApp] = useState(false);
+  const [activeTab, setActiveTab] = useState<"gallery" | "mint" | "subscribe">("mint");
   const { address, isConnected } = useAccount();
   const farcasterUser = useFarcasterUser();
 
@@ -30,15 +34,6 @@ const Index = () => {
     if (ref) {
       setReferralId(ref);
     }
-  }, []);
-
-  // Check if we're in a mini app
-  useEffect(() => {
-    const checkMiniApp = async () => {
-      const inApp = await isInMiniApp();
-      setInMiniApp(inApp);
-    };
-    checkMiniApp();
   }, []);
 
   // Use farcasterUser from hook to get wallet address if available
@@ -105,7 +100,22 @@ const Index = () => {
   }, []);
 
   const { data: canvasId, isLoading: isLoadingId, error: idError } = useQuery({
-    queryKey: ['canvasId'],
+    queryKey: ['canvasId', dayParam],
+    queryFn: async () => {
+      if (dayParam) {
+        const day = parseInt(dayParam, 10);
+        if (!isNaN(day)) {
+          return day;
+        }
+      }
+
+      // Fallback to contract call
+      return getCurrentCanvasId();
+    },
+  });
+
+  const { data: latestCanvasId, isLoading: isLoadingLatest } = useQuery({
+    queryKey: ['latestCanvasId'],
     queryFn: getCurrentCanvasId,
   });
 
@@ -129,7 +139,7 @@ const Index = () => {
     queryFn: getStartedAt,
   });
 
-  const isLoading = isLoadingId || isLoadingData;
+  const isLoading = isLoadingId || isLoadingData || isLoadingLatest;
   const error = idError || dataError;
 
 
@@ -145,29 +155,39 @@ const Index = () => {
 
       // Overwrite/update Farcaster embed meta tags (fc:miniapp and fc:frame) with dynamic imageUrl
       const baseUrl = window.location.origin + window.location.pathname;
+      const isPast = latestCanvasId && canvasId && canvasId < latestCanvasId;
+      const buttonTitle = isPast ? "View BasePaint Artwork" : "🎨 Mint BasePaint Artwork";
+
       const embedJson = generateMiniappEmbed(baseUrl, {
         imageUrl, // Dynamic canvas artwork URL
-        buttonTitle: "🎨 Mint BasePaint Artwork",
+        buttonTitle,
         buttonUrl: baseUrl,
         appName: "BasePaint Mint Hub"
       });
       // This function removes existing meta tags and injects new ones with dynamic imageUrl
       injectEmbedMeta(embedJson);
     }
-  }, [canvasId]);
+  }, [canvasId, latestCanvasId]);
 
   // Generate a referral link when the user connects their wallet
   useEffect(() => {
     if (isConnected && address) {
-      const link = `${window.location.origin}?referrer=${address}`;
+      let link = `${window.location.origin}?referrer=${address}`;
+      if (canvasId) {
+        link += `&day=${canvasId}`;
+      }
       setRefLink(link);
 
       // Overwrite meta tags with referral link and dynamic canvas artwork imageUrl
       // Always use dynamic imageUrl if canvasId is available, otherwise fallback
       const imageUrl = canvasId ? getArtworkUrl(canvasId) : `${window.location.origin}/og-image.png`;
+
+      const isPast = latestCanvasId && canvasId && canvasId < latestCanvasId;
+      const buttonTitle = isPast ? "View BasePaint Artwork" : "🎨 Mint BasePaint Artwork";
+
       const embedJson = generateMiniappEmbed(link, {
         imageUrl, // Dynamic canvas artwork URL when available
-        buttonTitle: "🎨 Mint BasePaint Artwork",
+        buttonTitle,
         buttonUrl: link,
         appName: "BasePaint Mint Hub"
       });
@@ -179,16 +199,20 @@ const Index = () => {
       if (canvasId) {
         const imageUrl = getArtworkUrl(canvasId);
         const baseUrl = window.location.origin + window.location.pathname;
+
+        const isPast = latestCanvasId && canvasId && canvasId < latestCanvasId;
+        const buttonTitle = isPast ? "View BasePaint Artwork" : "🎨 Mint BasePaint Artwork";
+
         const embedJson = generateMiniappEmbed(baseUrl, {
           imageUrl,
-          buttonTitle: "🎨 Mint BasePaint Artwork",
+          buttonTitle,
           buttonUrl: baseUrl,
           appName: "BasePaint Mint Hub"
         });
         injectEmbedMeta(embedJson);
       }
     }
-  }, [isConnected, address, canvasId]);
+  }, [isConnected, address, canvasId, latestCanvasId]);
 
 
 
@@ -225,13 +249,23 @@ const Index = () => {
       // Initialize SDK if not already initialized
       await initializeFarcasterSDK();
 
-      const timestamp = BigInt(Math.floor(Date.now() / 1000));
-      const secondsLeft = getSecondsLeft({ timestamp, startedAt, epochDuration });
-      const hoursLeft = Math.floor(secondsLeft / 3600);
+      const isPast = latestCanvasId && canvasId && canvasId < latestCanvasId;
 
-      const countdownText = hoursLeft > 0 ? `${hoursLeft} hours left!` : `${Math.floor(secondsLeft / 60)} minutes left!`;
+      let text = '';
 
-      const text = `🎨 New Day New Art,
+      if (isPast) {
+        text = `Check out Canvas #${canvasData.id}${canvasData.name ? ` - ${canvasData.name}` : ''} on BasePaint!
+      
+View this canvas or share to earn rewards!
+${refLink}
+`;
+      } else {
+        const timestamp = BigInt(Math.floor(Date.now() / 1000));
+        const secondsLeft = getSecondsLeft({ timestamp, startedAt, epochDuration });
+        const hoursLeft = Math.floor(secondsLeft / 3600);
+        const countdownText = hoursLeft > 0 ? `${hoursLeft} hours left!` : `${Math.floor(secondsLeft / 60)} minutes left!`;
+
+        text = `🎨 New Day New Art,
       
 Canvas #${canvasData.id}${canvasData.name ? ` - ${canvasData.name}` : ''} on BasePaint!
       
@@ -240,6 +274,7 @@ Canvas #${canvasData.id}${canvasData.name ? ` - ${canvasData.name}` : ''} on Bas
 Mint this collaborative artwork or share to earn rewards! 
 ${refLink}
 `;
+      }
 
 
       // Use the Farcaster Mini App SDK to compose a cast
@@ -276,65 +311,13 @@ ${refLink}
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto px-4 py-4 max-w-6xl">
         {/* Header: logo left, connections right (compact, single row) */}
-        <div className="flex items-center justify-between mb-4 animate-fade-in">
-          <div className="flex items-center gap-2">
-            <Palette className="w-8 h-8 text-primary" />
-            <h1 className="text-xl md:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Basepaint
-            </h1>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 md:h-9 md:w-9 text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                >
-                  <Info className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="sr-only">About BasePaint</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Palette className="w-5 h-5 text-primary" />
-                    About BasePaint Mint Hub
-                  </DialogTitle>
-                  <DialogDescription className="text-left space-y-3 pt-2">
-                    <div>
-                      <p className="font-medium text-foreground mb-1">What is BasePaint?</p>
-                      <p className="text-sm text-muted-foreground">
-                        BasePaint is a daily collaborative art canvas on Farcaster where creators paint together.
-                        Each day's final artwork becomes a mintable piece.
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground mb-1">About This Mint</p>
-                      <p className="text-sm text-muted-foreground">
-                        This mint hub provides an easy way to mint the daily collaborative artwork from BasePaint.xyz.
-                        Each canvas represents a day of collective creativity from the Farcaster community,
-                        transformed into a unique NFT on the Base network.
-                      </p>
-                    </div>
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-          </div>
+        <Header />
 
-          <div className="flex items-center gap-2">
-            {/* Show wallet connect - Farcaster profile integrated when in mini app */}
-            <div className="max-w-[180px]">
-              <WalletConnect
-                addressOverride={farcasterUser?.walletAddress}
-                farcasterUser={inMiniApp && !isLoading ? farcasterUser : null}
-                inMiniApp={inMiniApp && !isLoading}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Sub Header Navigation */}
+        <SubHeader />
 
         {isLoading ? (
           <div className="space-y-6">
@@ -400,8 +383,26 @@ ${refLink}
               />
             </div>
 
-            {/* Mint Button */}
-            <MintWithWallet price={2600000000000000n} canvasId={canvasId} referralId={referralId} />
+            {/* Mint Button or Buy Link */}
+            {latestCanvasId && canvasId && canvasId < latestCanvasId ? (
+              <Button
+                asChild
+                size="lg"
+                className="w-full bg-[#2081E2] hover:bg-[#1868B7] text-white font-bold text-lg py-6 shadow-lg hover:scale-105 transition-all duration-300"
+              >
+                <a
+                  href={`https://opensea.io/item/base/0xBa5e05cb26b78eDa3A2f8e3b3814726305dcAc83/${canvasId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Buy on OpenSea
+                </a>
+              </Button>
+            ) : (
+              <MintWithWallet price={2600000000000000n} canvasId={canvasId} referralId={referralId} />
+            )}
 
             {/* Referral / Share UI (shows when wallet connected). Moved below the mint button */}
             {refLink && (
@@ -444,6 +445,9 @@ ${refLink}
           </div>
         ) : null}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };

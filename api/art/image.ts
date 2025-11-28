@@ -74,7 +74,7 @@ export default async function handler(
     let dayNum: number;
 
     if (!day) {
-      // If no day specified, use current canvas
+      // No day parameter provided - query contract for current canvas
       try {
         dayNum = await getCurrentCanvasId();
       } catch (error) {
@@ -83,6 +83,7 @@ export default async function handler(
         return;
       }
     } else {
+      // Day parameter provided - skip contract query and use the specified day
       dayNum = parseInt(day, 10);
       if (isNaN(dayNum)) {
         res.status(400).send('Invalid day parameter');

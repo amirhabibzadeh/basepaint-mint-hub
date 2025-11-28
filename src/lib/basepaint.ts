@@ -55,6 +55,29 @@ export interface CanvasData {
   };
 }
 
+export interface Balance {
+  tokenId: string;
+  value: string;
+}
+
+export interface BalancesResponse {
+  balances: {
+    items: Balance[];
+    pageInfo: {
+      endCursor: string | null;
+    };
+  };
+}
+
+export interface CanvasMetadata {
+  id: number;
+  totalMints: number;
+  totalBurns: number;
+  totalEarned: string;
+  totalArtists: number;
+  name?: string;
+}
+
 export async function getCurrentCanvasId(): Promise<number> {
 
   try {
@@ -223,3 +246,211 @@ export async function getStartedAt(): Promise<bigint> {
     return BigInt(Math.floor(midnight.getTime() / 1000));
   }
 }
+
+/**
+ * Fetch wallet balances for a specific contract
+ */
+export async function getWalletBalances(
+  address: string,
+  contract: string = BASEPAINT_CONTRACT,
+  limit: number = 1000
+): Promise<Balance[]> {
+  const query = `
+    query balances($address: String!, $contract: String!, $cursor: String, $limit: Int) {
+      balances(
+        where: {ownerId: $address, contract: $contract}
+        limit: $limit
+        after: $cursor
+      ) {
+        items {
+          tokenId
+          value
+        }
+        pageInfo {
+          endCursor
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { address, contract, limit },
+        operationName: 'balances',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch balances: ${response.status}`);
+    }
+
+    const result: { data: BalancesResponse } = await response.json();
+    return result.data.balances.items;
+  } catch (error) {
+    console.error('[basepaint] Error fetching wallet balances:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch canvas data for multiple IDs
+ */
+export async function getCanvassByIds(ids: number[]): Promise<CanvasMetadata[]> {
+  const query = `
+    query canvassByIds($ids: [Int!]!) {
+      canvass(where: { id_in: $ids }, limit: 100) {
+        items {
+          id
+          totalMints
+          totalBurns
+          totalEarned
+          totalArtists
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        totalCount
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { ids },
+        operationName: 'canvassByIds',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch canvases: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data.canvass.items;
+  } catch (error) {
+    console.error('[basepaint] Error fetching canvases by IDs:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch popular canvases (ordered by totalMints desc)
+ */
+export async function getPopularCanvass(
+  limit: number = 60,
+  after?: string
+): Promise<CanvasMetadata[]> {
+  const query = `
+    query popularGallery($limit: Int!, $after: String) {
+      canvass(limit: $limit, after: $after, orderBy: "totalMints", orderDirection: "desc") {
+        items {
+          id
+          totalMints
+          totalBurns
+          totalEarned
+          totalArtists
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        totalCount
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { limit, after },
+        operationName: 'popularGallery',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch canvases: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data.canvass.items;
+  } catch (error) {
+    console.error('[basepaint] Error fetching popular canvases:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch rare canvases (ordered by totalMints asc, where totalMints > 0)
+ */
+export async function getRareCanvass(
+  limit: number = 60,
+  after?: string
+): Promise<CanvasMetadata[]> {
+  const query = `
+    query rareGallery($limit: Int!, $after: String) {
+      canvass(limit: $limit, after: $after, orderBy: "totalMints", orderDirection: "asc", where: { totalMints_gt: 0 }) {
+        items {
+          id
+          totalMints
+          totalBurns
+          totalEarned
+          totalArtists
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        totalCount
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { limit, after },
+        operationName: 'rareGallery',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch canvases: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data.canvass.items;
+  } catch (error) {
+    console.error('[basepaint] Error fetching rare canvases:', error);
+    throw error;
+  }
+}
+

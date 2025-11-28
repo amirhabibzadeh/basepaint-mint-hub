@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { isInMiniApp, hasQuickAuthBeenAttempted, markQuickAuthAsAttempted, FarcasterUser } from "@/lib/farcaster";
+import { hasQuickAuthBeenAttempted, markQuickAuthAsAttempted, FarcasterUser } from "@/lib/farcaster";
 import { useFarcaster } from "@/providers/FarcasterProvider";
+import { useInMiniApp } from "@/hooks/useInMiniApp";
 import { LogIn, User, Info, Palette } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
 
   const farcaster = useFarcaster();
   const providerUser = farcaster?.user ?? null;
+  const inMiniApp = useInMiniApp();
 
   // Sync provider user to local state immediately
   useEffect(() => {
@@ -30,7 +32,6 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
     let cancelled = false;
     const checkAuth = async () => {
       // Use provider for auth flow; still detect MiniApp for quick auth attempts
-      const inMiniApp = await isInMiniApp();
       if (inMiniApp && !hasQuickAuthBeenAttempted()) {
         markQuickAuthAsAttempted();
         setAutoLogin(true);
@@ -51,7 +52,7 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
     };
     checkAuth();
     return () => { cancelled = true; };
-  }, [farcaster]);
+  }, [farcaster, inMiniApp]);
 
   // Notify parent / global listeners about auth state changes
   useEffect(() => {

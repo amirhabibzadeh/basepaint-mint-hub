@@ -9,17 +9,16 @@ import { useEffect, useRef, useState } from "react";
 import { base } from "wagmi/chains";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import type { FarcasterUser } from "@/lib/farcaster";
+import { useFarcasterUser } from "@/hooks/useFarcasterUser";
+import { useInMiniApp } from "@/hooks/useInMiniApp";
 
 export function WalletConnect({ 
-  addressOverride,
-  farcasterUser,
-  inMiniApp = false
+  addressOverride
 }: { 
   addressOverride?: string;
-  farcasterUser?: FarcasterUser | null;
-  inMiniApp?: boolean;
 } = {}) {
+  const farcasterUser = useFarcasterUser();
+  const inMiniApp = useInMiniApp();
   const { address: wagmiAddress, isConnected } = useAccount();
   const address = addressOverride || wagmiAddress;
   const { connect, connectors, isPending } = useConnect();
