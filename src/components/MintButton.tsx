@@ -9,11 +9,6 @@ interface MintButtonProps {
 
 export function MintButton({ canvasId, referralId }: MintButtonProps) {
   const handleMint = () => {
-    console.log('Mint initiated for canvas:', canvasId);
-    if (referralId) {
-      console.log('Referral ID detected:', referralId);
-    }
-    
     toast.success(
       referralId 
         ? `Mint action triggered! Canvas #${canvasId} | Referral: ${referralId}`

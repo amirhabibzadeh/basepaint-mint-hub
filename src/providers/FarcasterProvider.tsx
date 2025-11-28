@@ -60,7 +60,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         // Listen to client events (if host provides sdk events)
         if (sdk && typeof (sdk as unknown as Record<string, unknown>)['on'] === 'function') {
           const onMiniappAdded = (payload: unknown) => {
-            console.debug('[farcaster] event miniappAdded', payload);
+            // ignore
           };
           const onContext = async () => {
             const updated = await getFarcasterContext();
@@ -95,7 +95,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           };
         }
       } catch (e) {
-        console.debug('[farcaster] provider init error', e);
         try {
           window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'provider-init', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
         } catch (err) {
@@ -112,7 +111,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       if (u) setUser(u);
       return u;
     } catch (e) {
-      console.error('[farcaster] signIn error', e);
       try {
         window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'signIn', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
       } catch (err) {
@@ -128,7 +126,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       if (u) setUser(u);
       return u;
     } catch (e) {
-      console.error('[farcaster] quickAuth error', e);
       try {
         window.dispatchEvent(new CustomEvent('farcaster:error', { detail: { source: 'quickAuth', error: `${e instanceof Error ? e.name + ': ' + e.message : String(e)}` } }));
       } catch (err) {

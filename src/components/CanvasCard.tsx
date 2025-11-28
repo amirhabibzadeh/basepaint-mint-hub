@@ -50,12 +50,14 @@ export const CanvasCard = ({ canvas, ownedCount = 0, onClick, isInProgress = fal
                                 <span className="text-xs font-medium text-primary">In progress...</span>
                             </div>
                         )}
-                        {hasOwned && (
-                            <div className="bg-accent/20 backdrop-blur-md px-2 py-1 rounded-lg border border-accent/30">
-                                <span className="text-xs font-medium text-accent">{ownedCount}</span>
-                            </div>
-                        )}
                     </div>
+
+                    {/* Owned count badge - bottom right */}
+                    {ownedCount > 0 && (
+                        <div className="absolute bottom-2 right-2 bg-accent/20 backdrop-blur-md px-2 py-1 rounded-lg border border-accent/30">
+                            <span className="text-xs font-medium text-accent">Owned: {ownedCount}</span>
+                        </div>
+                    )}
 
                     {/* Action button on hover */}
                     <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

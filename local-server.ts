@@ -11,7 +11,6 @@ const adaptHandler = (handler: (req: VercelRequest, res: VercelResponse) => void
         try {
             await handler(req as unknown as VercelRequest, res as unknown as VercelResponse);
         } catch (error) {
-            console.error('API Error:', error);
             if (!res.headersSent) {
                 res.status(500).json({ error: 'Internal Server Error' });
             }
@@ -28,5 +27,5 @@ app.get('/api/test', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Local API server running at http://localhost:${port}`);
+    // Server started
 });

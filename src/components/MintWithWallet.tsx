@@ -84,8 +84,6 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
       toast.success('Mint successful', { description: txHash });
     }
     if (isError && txError) {
-      console.error('Mint error:', txError);
-      
       // Check if user cancelled the transaction
       if (isUserRejection(txError)) {
         toast.error(<CountdownToast initialSeconds={3} />, {
@@ -127,8 +125,6 @@ export function MintWithWallet({ canvasId, referralId, price = BigInt(0), count:
         value: price * BigInt(count),
       });
     } catch (error) {
-      console.error('Mint error:', error);
-      
       // Check if user cancelled the transaction
       if (isUserRejection(error)) {
         toast.error(<CountdownToast initialSeconds={3} />, {

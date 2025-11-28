@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentCanvasId, getWalletBalances, getCanvassByIds, getPopularCanvass, getRareCanvass, CanvasMetadata } from "@/lib/basepaint";
+import { getCurrentCanvasId, getWalletBalances, getCanvassByIds, getPopularCanvass, getRareCanvass, getBurnedCanvass, CanvasMetadata, Balance } from "@/lib/basepaint";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { CanvasCard } from "@/components/CanvasCard";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { useFarcasterUser } from "@/hooks/useFarcasterUser";
 import {
     Select,
     SelectContent,
@@ -27,7 +26,6 @@ const Gallery = () => {
     const { wallet } = useParams<{ wallet: string }>();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterOption, setFilterOption] = useState<FilterOption>("LATEST");
-    const farcasterUser = useFarcasterUser();
 
     // Validate wallet parameter exists
     useEffect(() => {
@@ -44,11 +42,14 @@ const Gallery = () => {
     });
 
     // Fetch wallet balances
-    const { data: balances, isLoading: isLoadingBalances } = useQuery({
+    const { data: balances, isLoading: isLoadingBalances, error: balancesError } = useQuery<Balance[]>({
         queryKey: ['walletBalances', wallet],
-        queryFn: () => getWalletBalances(wallet!),
+        queryFn: () => {
+            return getWalletBalances(wallet!);
+        },
         enabled: !!wallet,
     });
+
 
     // Get canvas IDs to fetch based on filter option
     const canvasIdsToFetch = useMemo(() => {
@@ -58,7 +59,6 @@ const Gallery = () => {
             case "LATEST":
             case "OWNED":
             case "UNOWNED":
-            case "BURNED":
                 // Fetch recent 100 canvases
                 const count = Math.min(currentCanvasId, 100);
                 return Array.from({ length: count }, (_, i) => currentCanvasId - i);
@@ -77,7 +77,6 @@ const Gallery = () => {
             case "OLDEST":
             case "OWNED":
             case "UNOWNED":
-            case "BURNED":
                 return {
                     queryFn: () => getCanvassByIds(canvasIdsToFetch),
                     enabled: canvasIdsToFetch.length > 0,
@@ -90,6 +89,11 @@ const Gallery = () => {
             case "RARE":
                 return {
                     queryFn: () => getRareCanvass(60),
+                    enabled: true,
+                };
+            case "BURNED":
+                return {
+                    queryFn: () => getBurnedCanvass(60),
                     enabled: true,
                 };
             default:
@@ -108,15 +112,26 @@ const Gallery = () => {
 
     // Create a map of owned canvas counts
     const ownedCanvasMap = useMemo(() => {
-        if (!balances) return new Map<number, number>();
+        if (!balances) {
+            return new Map<number, number>();
+        }
         const map = new Map<number, number>();
         balances.forEach(balance => {
             const tokenId = parseInt(balance.tokenId);
             const count = parseInt(balance.value);
-            map.set(tokenId, count);
+            if (isNaN(tokenId)) {
+                return;
+            }
+            if (isNaN(count)) {
+                return;
+            }
+            // Only include balances with value > 0 (actual ownership, not burned/transferred)
+            if (count > 0) {
+                map.set(tokenId, count);
+            }
         });
         return map;
-    }, [balances]);
+    }, [balances, isLoadingBalances, balancesError]);
 
     // Filter canvases (sorting is now done server-side for POPULAR and RARE)
     const filteredCanvases = useMemo(() => {
@@ -133,16 +148,17 @@ const Gallery = () => {
             );
         }
 
-        // Apply ownership filter (client-side for OWNED, UNOWNED, BURNED)
+        // Apply ownership filter (client-side for OWNED, UNOWNED)
+        // BURNED is now sorted server-side, so no client-side filtering needed
         if (filterOption === "OWNED") {
-            filtered = filtered.filter(canvas => ownedCanvasMap.has(canvas.id));
+            filtered = filtered.filter(canvas => {
+                return ownedCanvasMap.has(canvas.id);
+            });
         } else if (filterOption === "UNOWNED") {
             filtered = filtered.filter(canvas => !ownedCanvasMap.has(canvas.id));
-        } else if (filterOption === "BURNED") {
-            filtered = filtered.filter(canvas => canvas.totalBurns > 0);
         }
 
-        // Apply client-side sorting only for LATEST and OLDEST (POPULAR and RARE are sorted server-side)
+        // Apply client-side sorting only for LATEST and OLDEST (POPULAR, RARE, and BURNED are sorted server-side)
         switch (filterOption) {
             case "LATEST":
                 filtered.sort((a, b) => b.id - a.id);
@@ -150,7 +166,7 @@ const Gallery = () => {
             case "OLDEST":
                 filtered.sort((a, b) => a.id - b.id);
                 break;
-            // POPULAR and RARE are already sorted by the server query
+            // POPULAR, RARE, and BURNED are already sorted by the server query
         }
 
         return filtered;
@@ -178,11 +194,6 @@ const Gallery = () => {
                         <div className="font-mono text-sm md:text-base font-medium break-all">
                             {wallet}
                         </div>
-                        {balances && (
-                            <div className="text-xs text-muted-foreground mt-2">
-                                Owns {balances.length} canvas{balances.length !== 1 ? 'es' : ''}
-                            </div>
-                        )}
                     </div>
                 )}
 

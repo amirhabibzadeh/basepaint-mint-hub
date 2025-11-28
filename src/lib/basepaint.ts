@@ -1,7 +1,7 @@
 import { createPublicClient, http, fallback } from 'viem';
 import { base } from 'viem/chains';
 
-const BASEPAINT_CONTRACT = '0xba5e05cb26b78eda3a2f8e3b3814726305dcac83';
+const BASEPAINT_CONTRACT = '0xBa5e05cb26b78eDa3A2f8e3b3814726305dcAc83';
 const GRAPHQL_ENDPOINT = 'https://graphql.basepaint.xyz/';
 
 // Base RPC configuration with fallbacks
@@ -102,7 +102,6 @@ export async function getCurrentCanvasId(): Promise<number> {
 
     return canvasId;
   } catch (error) {
-    console.error('[basepaint] Error fetching canvas ID:', error);
     throw error;
   }
 }
@@ -146,7 +145,6 @@ export async function getCanvasData(id: number): Promise<CanvasData> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[basepaint] GraphQL error response:', errorText);
       throw new Error(`Failed to fetch canvas data: ${response.status} ${response.statusText}`);
     }
 
@@ -154,14 +152,12 @@ export async function getCanvasData(id: number): Promise<CanvasData> {
 
 
     if (!result.data?.canvas) {
-      console.error('[basepaint] No canvas data in response:', result);
       throw new Error('No canvas data returned from API');
     }
 
 
     return result.data.canvas;
   } catch (error) {
-    console.error('[basepaint] Error fetching canvas data:', error);
     throw error;
   }
 }
@@ -203,7 +199,6 @@ export async function getEpochDuration(): Promise<bigint> {
     return BigInt(data as string | number | bigint);
   } catch (error) {
     // Fallback to 24 hours (86400 seconds) if contract doesn't have epochDuration
-    console.warn('Error fetching epochDuration, using default 24 hours:', error);
     return 86400n;
   }
 }
@@ -255,6 +250,9 @@ export async function getWalletBalances(
   contract: string = BASEPAINT_CONTRACT,
   limit: number = 1000
 ): Promise<Balance[]> {
+  // Don't normalize addresses - GraphQL API is case-sensitive
+  // Keep both address and contract in original format
+  
   const query = `
     query balances($address: String!, $contract: String!, $cursor: String, $limit: Int) {
       balances(
@@ -274,26 +272,33 @@ export async function getWalletBalances(
   `;
 
   try {
+    const requestBody = {
+      query,
+      variables: { address, contract, limit },
+      operationName: 'balances',
+    };
+    
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query,
-        variables: { address, contract, limit },
-        operationName: 'balances',
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
       throw new Error(`Failed to fetch balances: ${response.status}`);
     }
 
-    const result: { data: BalancesResponse } = await response.json();
+    const result: { data: BalancesResponse; errors?: any[] } = await response.json();
+    
+    if (!result.data?.balances) {
+      return [];
+    }
+    
     return result.data.balances.items;
   } catch (error) {
-    console.error('[basepaint] Error fetching wallet balances:', error);
     throw error;
   }
 }
@@ -343,7 +348,6 @@ export async function getCanvassByIds(ids: number[]): Promise<CanvasMetadata[]> 
     const result = await response.json();
     return result.data.canvass.items;
   } catch (error) {
-    console.error('[basepaint] Error fetching canvases by IDs:', error);
     throw error;
   }
 }
@@ -396,7 +400,6 @@ export async function getPopularCanvass(
     const result = await response.json();
     return result.data.canvass.items;
   } catch (error) {
-    console.error('[basepaint] Error fetching popular canvases:', error);
     throw error;
   }
 }
@@ -449,7 +452,58 @@ export async function getRareCanvass(
     const result = await response.json();
     return result.data.canvass.items;
   } catch (error) {
-    console.error('[basepaint] Error fetching rare canvases:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch burned canvases (ordered by totalBurns desc, where totalBurns > 0)
+ */
+export async function getBurnedCanvass(
+  limit: number = 60,
+  after?: string
+): Promise<CanvasMetadata[]> {
+  const query = `
+    query burnedGallery($limit: Int!, $after: String) {
+      canvass(limit: $limit, after: $after, orderBy: "totalBurns", orderDirection: "desc", where: { totalBurns_gt: 0 }) {
+        items {
+          id
+          totalMints
+          totalBurns
+          totalEarned
+          totalArtists
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        totalCount
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { limit, after },
+        operationName: 'burnedGallery',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch canvases: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data.canvass.items;
+  } catch (error) {
     throw error;
   }
 }

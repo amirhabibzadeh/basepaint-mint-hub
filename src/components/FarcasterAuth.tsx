@@ -64,16 +64,15 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
     }
   }, [providerUser]);
 
-  // Listen for provider error events and surface them as toasts + console logs
+  // Listen for provider error events and surface them as toasts
   useEffect(() => {
     const onError = (ev: Event) => {
       try {
         const detail = (ev as CustomEvent)?.detail;
         const message = detail?.error || 'Unknown Farcaster error';
-        console.error('[farcaster] event error', detail);
         toast.error(`Farcaster error: ${message}`);
       } catch (err) {
-        console.error('Error handling farcaster:error event', err);
+        // ignore
       }
     };
     window.addEventListener('farcaster:error', onError as EventListener);
@@ -98,7 +97,7 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
             try {
               connect({ connector });
             } catch (err) {
-              console.debug('Auto wallet connect attempt:', err);
+              // ignore
             }
           }
         }
@@ -106,7 +105,6 @@ export function FarcasterAuth({ compact = false }: { compact?: boolean } = {}) {
         toast.error("Sign-in was cancelled or failed");
       }
     } catch (error) {
-      console.error('Farcaster sign-in error:', error);
       toast.error("Failed to sign in with Farcaster");
     } finally {
       setIsLoading(false);
@@ -161,7 +159,7 @@ export function FarcasterPreviewButton() {
       const url = `https://farcaster.xyz/~/developers/mini-apps/preview?url=${encoded}`;
       window.open(url, '_blank');
     } catch (e) {
-      console.error('Failed to open Farcaster preview:', e);
+      // ignore
     }
   };
 

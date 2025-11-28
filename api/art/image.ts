@@ -2,7 +2,7 @@
 import { base } from 'viem/chains';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const BASEPAINT_CONTRACT = '0xba5e05cb26b78eda3a2f8e3b3814726305dcac83';
+const BASEPAINT_CONTRACT = '0xBa5e05cb26b78eDa3A2f8e3b3814726305dcAc83';
 
 import { createPublicClient, http, fallback } from 'viem';
 
@@ -59,7 +59,6 @@ async function getCurrentCanvasId(): Promise<number> {
     const canvasId = Number(data) - 1;
     return canvasId;
   } catch (error) {
-    console.error('[API] Error fetching canvas ID:', error);
     throw error;
   }
 }
@@ -78,7 +77,6 @@ export default async function handler(
       try {
         dayNum = await getCurrentCanvasId();
       } catch (error) {
-        console.error('[API] Error fetching current canvas:', error);
         res.status(500).send('Failed to fetch current canvas');
         return;
       }
@@ -97,7 +95,6 @@ export default async function handler(
     const response = await fetch(artworkUrl);
 
     if (!response.ok) {
-      console.error('[API] Failed to fetch artwork, status:', response.status);
       res.status(500).send('Failed to fetch artwork');
       return;
     }
@@ -132,11 +129,6 @@ export default async function handler(
     res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, must-revalidate`);
     res.send(Buffer.from(imageBuffer));
   } catch (error) {
-    console.error('[API] Error generating image:', error);
-    console.error('[API] Error details:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-    });
     res.status(500).send('Internal server error');
   }
 }

@@ -29,7 +29,6 @@ export async function isInMiniApp(): Promise<boolean> {
   try {
     return await sdk.isInMiniApp();
   } catch (e) {
-    console.debug('[farcaster] isInMiniApp check failed', e);
     return false;
   }
 }
@@ -40,10 +39,8 @@ export async function initializeFarcasterSDK(): Promise<boolean> {
     // Calling ready() will only work when running inside a host; swallow errors
     await sdk.actions.ready();
     _farcasterInitialized = true;
-    console.debug('[farcaster] SDK ready');
     return true;
   } catch (err) {
-    console.debug('[farcaster] sdk.actions.ready() failed (not in host?):', err);
     // still mark initialized to avoid repeating noisy calls
     _farcasterInitialized = true;
     return false;
@@ -55,7 +52,6 @@ export async function quickAuthUser(): Promise<FarcasterUser | null> {
   try {
     await initializeFarcasterSDK();
     const { token } = await sdk.quickAuth.getToken();
-    console.debug('[farcaster] quickAuth.getToken returned a token');
 
     // Decode JWT payload (safe decode)
     const base64 = token?.split?.('.')?.[1];
@@ -64,12 +60,11 @@ export async function quickAuthUser(): Promise<FarcasterUser | null> {
       try {
         payload = JSON.parse(atob(base64.replace(/-/g, '+').replace(/_/g, '/')));
       } catch (err) {
-        console.debug('[farcaster] failed to decode quickAuth token payload', err);
+        // ignore
       }
     }
     if (!payload) return null;
     const pl = payload as { sub?: number; username?: string; displayName?: string; pfpUrl?: string };
-    console.debug('[farcaster] quickAuth payload', { fid: pl.sub, username: pl.username });
     return {
       fid: pl.sub || 0,
       username: pl.username,
@@ -77,7 +72,6 @@ export async function quickAuthUser(): Promise<FarcasterUser | null> {
       pfpUrl: pl.pfpUrl,
     };
   } catch (err) {
-    console.error('[farcaster] quickAuthUser error:', err instanceof Error ? `${err.name}: ${err.message}` : err);
     return null;
   }
 }
@@ -101,11 +95,6 @@ export async function signInWithFarcaster(): Promise<FarcasterUser | null> {
       walletAddress: custody,
     };
   } catch (error) {
-    if (error && typeof error === 'object' && 'name' in error && (error as Record<string, unknown>)['name'] === 'RejectedByUser') {
-      console.log('[farcaster] User rejected sign-in');
-    } else {
-      console.error('[farcaster] Error signing in with Farcaster:', error);
-    }
     return null;
   }
 }
@@ -116,7 +105,6 @@ export async function getFarcasterContext() {
     const context = await sdk.context;
     return context;
   } catch (error) {
-    console.error('[farcaster] Error getting Farcaster context:', error);
     return null;
   }
 

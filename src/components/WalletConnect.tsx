@@ -48,7 +48,6 @@ export function WalletConnect({
           await switchChainAsync({ chainId: base.id });
           toast.success("Switched to Base network");
         } catch (error) {
-          console.error("Failed to switch to Base:", error);
           toast.error("Please switch to Base network manually");
         }
       }
@@ -70,7 +69,6 @@ export function WalletConnect({
     try {
       connect({ connector });
     } catch (error) {
-      console.error("Connection error:", error);
       toast.error("Failed to connect wallet");
     }
   };

@@ -222,7 +222,6 @@ const Index = () => {
       await navigator.clipboard.writeText(refLink);
       toast.success('Referral link copied to clipboard');
     } catch (err) {
-      console.error('Copy failed', err);
       toast.error('Failed to copy link');
     }
   };
@@ -234,7 +233,7 @@ const Index = () => {
       try {
         await navigator.share({ title: 'BasePaint', text, url: refLink });
       } catch (err) {
-        console.error('Share failed', err);
+        // ignore
       }
     } else {
       await copyRef();
@@ -286,12 +285,8 @@ ${refLink}
       // result can be undefined if close is set to true, or cast can be null if user cancels
       if (result?.cast) {
         toast.success('Cast posted successfully!');
-      } else if (result && result.cast === null) {
-        // User cancelled - no need to show error
-        console.log('User cancelled cast composition');
       }
     } catch (err) {
-      console.error('Failed to compose cast:', err);
       toast.error('Failed to share to Farcaster. Please try again.');
     }
   };
