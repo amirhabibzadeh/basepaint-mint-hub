@@ -54,7 +54,7 @@ export const ShareGallery = ({ wallet, ownedCount = 0 }: ShareGalleryProps) => {
 
     return (
         <div className="mb-6 p-4 bg-card/40 backdrop-blur-xl border border-border/50 rounded-xl">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium mb-1">
                         {ownedCount > 0 
@@ -65,7 +65,7 @@ export const ShareGallery = ({ wallet, ownedCount = 0 }: ShareGalleryProps) => {
                         Share your BasePaint collection with others
                     </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 md:gap-2">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 w-full md:w-auto">
                     <Button
                         onClick={copyGalleryLink}
                         variant="outline"
