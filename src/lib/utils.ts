@@ -86,7 +86,7 @@ function ensureAbsoluteHttpsUrl(url: string, fallbackOrigin?: string): string {
 export function generateMiniappEmbed(url: string, options: EmbedOptions): string {
   const {
     imageUrl,
-    buttonTitle = "🎨 Mint BasePaint Artwork",
+    buttonTitle = "🎨 BasePaint Mint Hub",
     buttonUrl = url,
     appName = "BasePaint Mint Hub",
     splashImageUrl = imageUrl,
