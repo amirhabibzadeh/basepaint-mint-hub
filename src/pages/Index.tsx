@@ -4,7 +4,7 @@ import { generateMiniappEmbed, injectEmbedMeta, updateOgImage } from "@/lib/util
 import { StatCard } from "@/components/StatCard";
 import { MintWithWallet } from "@/components/MintWithWallet";
 import { WalletConnect } from "@/components/WalletConnect";
-import Countdown from "@/components/Countdown";
+import Countdown, { getSecondsLeft } from "@/components/Countdown";
 import { Palette, Coins, Grid3x3, Users, Copy, Share2, ExternalLink, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -219,13 +219,28 @@ const Index = () => {
   };
 
   const shareToFarcaster = async () => {
-    if (!refLink) return;
+    if (!refLink || !canvasData || !startedAt || !epochDuration) return;
 
     try {
       // Initialize SDK if not already initialized
       await initializeFarcasterSDK();
 
-      const text = `Mint this collaborative artwork on BasePaint or share it with friends to earn 10 percent of the rewards. ${refLink}\n\n`;
+      const timestamp = BigInt(Math.floor(Date.now() / 1000));
+      const secondsLeft = getSecondsLeft({ timestamp, startedAt, epochDuration });
+      const hoursLeft = Math.floor(secondsLeft / 3600);
+
+      const countdownText = hoursLeft > 0 ? `${hoursLeft} hours left!` : `${Math.floor(secondsLeft / 60)} minutes left!`;
+
+      const text = `🎨 New Day New Art,
+      
+Canvas #${canvasData.id}${canvasData.name ? ` - ${canvasData.name}` : ''} on BasePaint!
+      
+🔥 ${countdownText}
+
+Mint this collaborative artwork or share to earn rewards! 
+${refLink}
+`;
+
 
       // Use the Farcaster Mini App SDK to compose a cast
       const result = await sdk.actions.composeCast({
@@ -291,15 +306,15 @@ const Index = () => {
                     <div>
                       <p className="font-medium text-foreground mb-1">What is BasePaint?</p>
                       <p className="text-sm text-muted-foreground">
-                        BasePaint is a daily collaborative art canvas on Farcaster where creators paint together. 
+                        BasePaint is a daily collaborative art canvas on Farcaster where creators paint together.
                         Each day's final artwork becomes a mintable piece.
                       </p>
                     </div>
                     <div>
                       <p className="font-medium text-foreground mb-1">About This Mint</p>
                       <p className="text-sm text-muted-foreground">
-                        This mint hub provides an easy way to mint the daily collaborative artwork from BasePaint.xyz. 
-                        Each canvas represents a day of collective creativity from the Farcaster community, 
+                        This mint hub provides an easy way to mint the daily collaborative artwork from BasePaint.xyz.
+                        Each canvas represents a day of collective creativity from the Farcaster community,
                         transformed into a unique NFT on the Base network.
                       </p>
                     </div>
@@ -312,8 +327,8 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {/* Show wallet connect - Farcaster profile integrated when in mini app */}
             <div className="max-w-[180px]">
-              <WalletConnect 
-                addressOverride={farcasterUser?.walletAddress} 
+              <WalletConnect
+                addressOverride={farcasterUser?.walletAddress}
                 farcasterUser={inMiniApp && !isLoading ? farcasterUser : null}
                 inMiniApp={inMiniApp && !isLoading}
               />
