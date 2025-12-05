@@ -279,7 +279,7 @@ ${refLink}
                   {canvasData.name && ` • ${canvasData.name}`}
                 </span>
               </div>
-              {epochDuration && startedAt && (
+              {epochDuration && startedAt && latestCanvasId && canvasId === latestCanvasId && (
                 <div className="absolute bottom-3 left-3 bg-background/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border/50 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-mono font-bold text-foreground">
@@ -317,12 +317,31 @@ ${refLink}
               />
             </div>
 
+            {/* Show link to mint latest if viewing the latest day */}
+            {latestCanvasId && canvasId && canvasId !== latestCanvasId && (
+              <Alert className="mb-4">
+                <AlertDescription className="flex items-center justify-between flex-wrap gap-2">
+                  <span>You're viewing an older canvas. Mint the latest one!</span>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-[#2081E2] hover:bg-[#1868B7] text-white"
+                  >
+                    <a href={`/?day=${latestCanvasId}`} className="flex items-center gap-2">
+                      Mint Latest Canvas #{latestCanvasId}
+                    </a>
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Mint Button or Buy Link */}
             {latestCanvasId && canvasId && canvasId < latestCanvasId ? (
               <Button
                 asChild
+                variant="outline"
                 size="lg"
-                className="w-full bg-[#2081E2] hover:bg-[#1868B7] text-white font-bold text-lg py-6 shadow-lg hover:scale-105 transition-all duration-300"
+                className="w-full font-bold text-lg py-6 hover:scale-105 transition-all duration-300"
               >
                 <a
                   href={`https://opensea.io/item/base/0xBa5e05cb26b78eDa3A2f8e3b3814726305dcAc83/${canvasId}`}

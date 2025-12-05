@@ -68,29 +68,29 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    const day = req.query.day as string | undefined;
+    const dayParam = req.query.day as string | undefined;
 
-    let dayNum: number;
+    let day: number;
 
-    if (!day) {
+    if (!dayParam) {
       // No day parameter provided - query contract for current canvas
       try {
-        dayNum = await getCurrentCanvasId();
+        day = await getCurrentCanvasId();
       } catch (error) {
         res.status(500).send('Failed to fetch current canvas');
         return;
       }
     } else {
       // Day parameter provided - skip contract query and use the specified day
-      dayNum = parseInt(day, 10);
-      if (isNaN(dayNum)) {
+      day = parseInt(dayParam, 10);
+      if (isNaN(day)) {
         res.status(400).send('Invalid day parameter');
         return;
       }
     }
 
     // Fetch the actual artwork from basepaint.xyz
-    const artworkUrl = `https://basepaint.xyz/api/art/image?day=${dayNum}`;
+    const artworkUrl = `https://basepaint.xyz/api/art/image?day=${day}`;
 
     const response = await fetch(artworkUrl);
 
@@ -103,8 +103,8 @@ export default async function handler(
 
     res.setHeader('Content-Type', 'image/png');
 
-    // Use ETag with dayNum to invalidate cache when day changes
-    const etag = `"day-${dayNum}"`;
+    // Use ETag with day to invalidate cache when day changes
+    const etag = `"day-${day}"`;
     res.setHeader('ETag', etag);
 
     // Check if client has cached version
