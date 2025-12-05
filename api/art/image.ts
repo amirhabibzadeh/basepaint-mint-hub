@@ -77,6 +77,10 @@ export default async function handler(
       try {
         day = await getCurrentCanvasId();
       } catch (error) {
+        // Don't cache error responses
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.status(500).send('Failed to fetch current canvas');
         return;
       }
@@ -84,6 +88,10 @@ export default async function handler(
       // Day parameter provided - skip contract query and use the specified day
       day = parseInt(dayParam, 10);
       if (isNaN(day)) {
+        // Don't cache error responses
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.status(400).send('Invalid day parameter');
         return;
       }
@@ -95,23 +103,15 @@ export default async function handler(
     const response = await fetch(artworkUrl);
 
     if (!response.ok) {
+      // Don't cache error responses
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.status(500).send('Failed to fetch artwork');
       return;
     }
 
     const imageBuffer = await response.arrayBuffer();
-
-    res.setHeader('Content-Type', 'image/png');
-
-    // Use ETag with day to invalidate cache when day changes
-    const etag = `"day-${day}"`;
-    res.setHeader('ETag', etag);
-
-    // Check if client has cached version
-    if (req.headers['if-none-match'] === etag) {
-      res.status(304).end(); // Not Modified
-      return;
-    }
 
     // Calculate seconds until next midnight UTC (BasePaint likely uses UTC)
     const now = new Date();
@@ -123,12 +123,37 @@ export default async function handler(
     }
     const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
 
-    // Cache until midnight, but cap at 1 hour (3600 seconds)
-    const cacheMaxAge = Math.min(3600, secondsUntilMidnight);
+    // Cache until midnight, but cap at 1 minute
+    const cacheMaxAge = Math.min(60, secondsUntilMidnight);
 
-    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, must-revalidate`);
+    // Set cache headers BEFORE checking ETag to ensure they're always set
+    // Use explicit cache control: max-age for browser, s-maxage for CDN/edge
+    // Add stale-while-revalidate=0 to prevent serving stale content
+    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, stale-while-revalidate=0, must-revalidate`);
+    
+    // Set Expires header for compatibility (now + cacheMaxAge seconds)
+    const expiresDate = new Date(now.getTime() + cacheMaxAge * 1000);
+    res.setHeader('Expires', expiresDate.toUTCString());
+
+    res.setHeader('Content-Type', 'image/png');
+
+    // Use ETag with day to invalidate cache when day changes
+    const etag = `"day-${day}"`;
+    res.setHeader('ETag', etag);
+
+    // Check if client has cached version
+    if (req.headers['if-none-match'] === etag) {
+      // 304 responses should also include cache headers
+      res.status(304).end(); // Not Modified
+      return;
+    }
+
     res.send(Buffer.from(imageBuffer));
   } catch (error) {
+    // Don't cache error responses
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.status(500).send('Internal server error');
   }
 }
