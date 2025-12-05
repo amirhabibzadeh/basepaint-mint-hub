@@ -123,8 +123,8 @@ export default async function handler(
     }
     const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
 
-    // Cache until midnight, with a minimum of 60 seconds
-    const cacheMaxAge = Math.max(60, secondsUntilMidnight);
+    // Cache until midnight, but cap at 1 hour (3600 seconds)
+    const cacheMaxAge = Math.min(3600, secondsUntilMidnight);
 
     res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, must-revalidate`);
     res.send(Buffer.from(imageBuffer));
