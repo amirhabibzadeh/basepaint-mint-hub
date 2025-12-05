@@ -113,26 +113,38 @@ export default async function handler(
 
     const imageBuffer = await response.arrayBuffer();
 
-    // Calculate seconds until next midnight UTC (BasePaint likely uses UTC)
     const now = new Date();
-    const midnight = new Date(now);
-    midnight.setUTCHours(23, 59, 59, 999); // Today's midnight UTC
-    // If we've already passed midnight today, add 24 hours for tomorrow
-    if (midnight.getTime() <= now.getTime()) {
-      midnight.setTime(midnight.getTime() + 24 * 60 * 60 * 1000);
+    let cacheMaxAge: number;
+    let expiresDate: Date;
+
+    if (dayParam) {
+      // When day parameter is provided, the artwork is static and can be cached indefinitely
+      // Set to 1 year (31536000 seconds) - effectively unlimited
+      cacheMaxAge = 31536000; // 1 year in seconds
+      expiresDate = new Date(now.getTime() + cacheMaxAge * 1000);
+      
+      // For static content, use immutable cache directive
+      res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, immutable`);
+    } else {
+      // No day parameter - this is the current canvas, cache for short duration
+      // Calculate seconds until next midnight UTC (BasePaint likely uses UTC)
+      const midnight = new Date(now);
+      midnight.setUTCHours(23, 59, 59, 999); // Today's midnight UTC
+      // If we've already passed midnight today, add 24 hours for tomorrow
+      if (midnight.getTime() <= now.getTime()) {
+        midnight.setTime(midnight.getTime() + 24 * 60 * 60 * 1000);
+      }
+      const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
+
+      // Cache until midnight, but cap at 1 minute
+      cacheMaxAge = Math.min(60, secondsUntilMidnight);
+      expiresDate = new Date(now.getTime() + cacheMaxAge * 1000);
+      
+      // For dynamic content, use must-revalidate
+      res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, stale-while-revalidate=0, must-revalidate`);
     }
-    const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
-
-    // Cache until midnight, but cap at 1 minute
-    const cacheMaxAge = Math.min(60, secondsUntilMidnight);
-
-    // Set cache headers BEFORE checking ETag to ensure they're always set
-    // Use explicit cache control: max-age for browser, s-maxage for CDN/edge
-    // Add stale-while-revalidate=0 to prevent serving stale content
-    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}, stale-while-revalidate=0, must-revalidate`);
     
-    // Set Expires header for compatibility (now + cacheMaxAge seconds)
-    const expiresDate = new Date(now.getTime() + cacheMaxAge * 1000);
+    // Set Expires header for compatibility
     res.setHeader('Expires', expiresDate.toUTCString());
 
     res.setHeader('Content-Type', 'image/png');
