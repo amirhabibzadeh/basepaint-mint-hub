@@ -136,8 +136,8 @@ export default async function handler(
       }
       const secondsUntilMidnight = Math.floor((midnight.getTime() - now.getTime()) / 1000);
 
-      // Cache until midnight, but cap at 1 minute
-      cacheMaxAge = Math.min(60, secondsUntilMidnight);
+      // Cache until midnight, but cap at 1 hour
+      cacheMaxAge = Math.min(3600, secondsUntilMidnight); // 1 hour
       expiresDate = new Date(now.getTime() + cacheMaxAge * 1000);
       
       // For dynamic content, use must-revalidate
